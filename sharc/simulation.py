@@ -43,6 +43,11 @@ class Simulation(ABC, Observable):
             self.param_system = self.parameters.rns
         elif self.parameters.general.system == "RAS":
             self.param_system = self.parameters.ras
+        elif self.parameters.general.system == "SCM":
+            self.param_system = self.parameters.scm
+        else:
+            sys.stderr.write("ERROR\nInvalid system: " + parameters.general.system)
+            sys.exit(1)           
 
         self.co_channel = self.parameters.general.enable_cochannel
         self.adjacent_channel = self.parameters.general.enable_adjacent_channel

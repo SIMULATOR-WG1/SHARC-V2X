@@ -18,6 +18,7 @@ from sharc.parameters.parameters_fss_es import ParametersFssEs
 from sharc.parameters.parameters_haps import ParametersHaps
 from sharc.parameters.parameters_rns import ParametersRns
 from sharc.parameters.parameters_ras import ParametersRas
+from sharc.parameters.parameters_scm import ParametersScm
 
 
 class Parameters(object):
@@ -39,6 +40,7 @@ class Parameters(object):
         self.haps = ParametersHaps()
         self.rns = ParametersRns()
         self.ras = ParametersRas()
+        self.scm = ParametersScm()
 
 
     def set_file_name(self, file_name: str):
@@ -382,3 +384,39 @@ class Parameters(object):
         self.ras.par_ep = config.getfloat("RAS", "par_ep")
         self.ras.Beta_0 = config.getfloat("RAS", "Beta_0")
         self.ras.clutter_loss = config.getboolean("RAS", "clutter_loss")
+
+        #######################################################################
+        # SCM
+        #######################################################################
+        self.scm.type = config.get("SCM", "type")
+        self.scm.height = config.getfloat("SCM", "height")
+        self.scm.elevation_min = config.getfloat("SCM", "elevation_min")
+        self.scm.elevation_max = config.getfloat("SCM", "elevation_max")
+        self.scm.azimuth = config.get("SCM", "azimuth")
+        self.scm.location = config.get("SCM", "location")
+        self.scm.x = config.getfloat("SCM", "x")
+        self.scm.y = config.getfloat("SCM", "y")
+        self.scm.min_dist_to_bs = config.getfloat("SCM", "min_dist_to_bs")
+        self.scm.max_dist_to_bs = config.getfloat("SCM", "max_dist_to_bs")
+        self.scm.frequency = config.getfloat("SCM", "frequency")
+        self.scm.bandwidth = config.getfloat("SCM", "bandwidth")
+        self.scm.noise_temperature = config.getfloat("SCM", "noise_temperature")
+        self.scm.adjacent_ch_selectivity = config.getfloat("SCM", "adjacent_ch_selectivity")
+        self.scm.inr_scaling = config.getfloat("SCM", "inr_scaling")
+        self.scm.tx_power_density = config.getfloat("SCM", "tx_power_density")
+        self.scm.antenna_pattern = config.get("SCM", "antenna_pattern")
+        self.scm.element_max_g = config.get("SCM", "element_max_g")
+        self.scm.element_phi_deg_3db = config.get("SCM", "element_phi_deg_3db")
+        self.scm.element_theta_deg_3db = config.get("SCM", "element_theta_deg_3db")
+        self.scm.element_am = config.get("SCM", "element_am")
+        self.scm.element_sla_v = config.get("SCM", "element_sla_v")
+        self.scm.n_rows = config.get("SCM", "n_rows")
+        self.scm.n_columns = config.get("SCM", "n_columns")
+        self.scm.element_horiz_spacing = config.get("SCM", "element_horiz_spacing")
+        self.scm.element_vert_spacing = config.get("SCM", "element_vert_spacing")
+        self.scm.num_beams = config.get("SCM", "num_beams")
+        self.scm.channel_model = config.get("SCM", "channel_model")
+        self.scm.BOLTZMANN_CONSTANT = config.getfloat("SCM", "BOLTZMANN_CONSTANT")
+        self.scm.EARTH_RADIUS = config.getfloat("SCM", "EARTH_RADIUS")
+       
+        

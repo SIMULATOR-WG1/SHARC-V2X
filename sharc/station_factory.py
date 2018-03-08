@@ -10,6 +10,7 @@ import sys
 import math
 
 from sharc.support.enumerations import StationType
+from sharc.support.named_tuples import AntennaPar
 from sharc.parameters.parameters import Parameters
 from sharc.parameters.parameters_imt import ParametersImt
 from sharc.parameters.parameters_antenna_imt import ParametersAntennaImt
@@ -19,6 +20,7 @@ from sharc.parameters.parameters_fss_es import ParametersFssEs
 from sharc.parameters.parameters_haps import ParametersHaps
 from sharc.parameters.parameters_rns import ParametersRns
 from sharc.parameters.parameters_ras import ParametersRas
+from sharc.parameters.parameters_scm import ParametersScm
 from sharc.station_manager import StationManager
 from sharc.spectral_mask_imt import SpectralMaskImt
 from sharc.antenna.antenna import Antenna
@@ -354,6 +356,8 @@ class StationFactory(object):
             return StationFactory.generate_rns(parameters.rns, random_number_gen)
         elif parameters.general.system == "RAS":
             return StationFactory.generate_ras_station(parameters.ras)
+        elif parameters.general.system == "SCM":
+            return StationFactory.generate_scm_station(parameters.scm, topology, random_number_gen)            
         else:
             sys.stderr.write("ERROR\nInvalid system: " + parameters.general.system)
             sys.exit(1)
@@ -486,7 +490,142 @@ class StationFactory(object):
 
         return fss_earth_station
 
+    @staticmethod
+    def generate_scm_station(param: ParametersScm, 
+                             topology: Topology,
+                             random_number_gen: np.random.RandomState, *args):
+        """
+        Generates SCM (IMT-like) Station.
 
+        Arguments:
+            param: ParametersScm
+            random_number_gen: np.random.RandomState
+            topology (optional): Topology
+        """
+        if len(args): topology = args[0]
+
+        scm_station = StationManager(1)
+        scm_station.station_type = StationType.SCM
+
+        if param.location.upper() == "FIXED":
+            scm_station.x = np.array([param.x])
+            scm_station.y = np.array([param.y])
+        elif param.location.upper() == "CELL":
+            x, y, dummy1, dummy2 = StationFactory.get_random_position(1, topology, random_number_gen,
+                                                                      param.min_dist_to_bs, True)
+            scm_station.x = np.array(x)
+            scm_station.y = np.array(y)
+        elif param.location.upper() == "NETWORK":
+            x, y, dummy1, dummy2 = StationFactory.get_random_position(1, topology, random_number_gen,
+                                                                      param.min_dist_to_bs, False)
+            scm_station.x = np.array(x)
+            scm_station.y = np.array(y)
+        elif param.location.upper() == "UNIFORM_DIST":
+            dist = random_number_gen.uniform( param.min_dist_to_bs, param.max_dist_to_bs)
+            angle = random_number_gen.uniform(-np.pi, np.pi)
+            scm_station.x[0] = np.array(dist * np.cos(angle))
+            scm_station.y[0] = np.array(dist * np.sin(angle))
+        else:
+            sys.stderr.write("ERROR\nSCM location type {} not supported".format(param.location))
+            sys.exit(1)
+
+        scm_station.height = np.array([param.height])
+
+        if param.azimuth.upper() == "RANDOM":
+            scm_station.azimuth = random_number_gen.uniform(-180., 180.)
+        else:
+            scm_station.azimuth = np.array([param.azimuth])
+
+        elevation = random_number_gen.uniform(param.elevation_min, param.elevation_max)
+        scm_station.elevation = np.array([elevation])
+
+        scm_station.active = np.array([True])
+        scm_station.tx_power = np.array([param.tx_power_density + 10*math.log10(param.bandwidth*1e6) + 30])
+        scm_station.rx_interference = -500
+
+        if param.antenna_pattern.upper() == "OMNI":
+            scm_station.antenna = np.array([AntennaOmni(param.antenna_gain)])
+        elif param.antenna_pattern.upper() == "M2101":
+            scm_antenna_params = AntennaPar(param.antenna_pattern,
+                                            param.element_max_g,
+                                            param.element_phi_deg_3db,
+                                            param.element_theta_deg_3db,
+                                            param.element_am,
+                                            param.element_sla_v,
+                                            param.n_rows,
+                                            param.n_columns,
+                                            param.element_horiz_spacing,
+                                            param.element_vert_spacing)
+            scm_station.antenna = np.array([AntennaBeamformingImt(scm_antenna_params, 
+                                                                  scm_station.azimuth,
+                                                                  scm_station.elevation)])
+            phi, theta = StationFactory.get_scm_antenna_beams(param.type, 
+                                                              scm_station.height,
+                                                              param.num_beams,
+                                                              scm_station.azimuth,
+                                                              scm_station.elevation,
+                                                              random_number_gen)
+            for b in range(param.num_beams):
+                scm_station.antenna.add_beam(phi, theta)
+        else:
+            sys.stderr.write("ERROR\nInvalid SCM antenna pattern: " + param.antenna_pattern)
+            sys.exit(1)
+
+        scm_station.noise_temperature = param.noise_temperature
+        scm_station.bandwidth = np.array([param.bandwidth])
+        scm_station.noise_temperature = param.noise_temperature
+        scm_station.thermal_noise = -500
+        scm_station.total_interference = -500
+
+        return scm_station
+
+    @staticmethod
+    def get_scm_antenna_beams(type: str, 
+                              height: float, 
+                              num_beams: int,
+                              azimuth: float,
+                              elevation: float,
+                              random_number_gen: np.random.RandomState) -> tuple:
+        """
+        Calculates the direction of the beams of the SCM station. If the SCM 
+        station behaves like an IMT base station, then the beams are pointing 
+        to random points inside its coverage area, which is defined by the 
+        varaibles coverage_radius and coverage_azimuth (as if the SCM station
+        was serving a certain number of receive stations). If the SCM 
+        station behaves like an IMT user equipment, the single beam azimuth 
+        is random and elevation is uniform in interval [-90, 90] deg.
+        
+        Parameters
+        ----------
+            type : BS or UE
+            height : antenna height of the SCM station
+            num_beams : number of beams to be created
+            azimuth : azimuth angle of the SCM station (physical orientation)
+            elevation : elevation angle of the SCM station (physical orientation)
+            random_number_gen : random number generator
+            
+        Returns
+        -------
+            phi : azimuth angles of the beams
+            theta : elevation angles of the beams
+        """
+        scm_coverage_radius = 100
+        scm_coverage_azimuth = 120
+        distance = random_number_gen.uniform(1, scm_coverage_radius, num_beams)
+        phi = random_number_gen.uniform(-scm_coverage_azimuth/2, scm_coverage_azimuth/2, num_beams) + azimuth
+        if type.upper() == "BS":
+            scm_ue_height = 1.5
+            theta = - np.degrees(np.arctan((height - scm_ue_height)/distance)) - elevation
+        elif type.upper() == "UE":
+            scm_bs_height = 6
+            theta = - np.degrees(np.arctan((scm_bs_height - height)/distance))
+        else:
+            sys.stderr.write("ERROR\nInvalid SCM station type: " + type)
+            sys.exit(1)
+        return phi, theta
+                
+        
+        
     @staticmethod
     def generate_fs_station(param: ParametersFs):
         fs_station = StationManager(1)
