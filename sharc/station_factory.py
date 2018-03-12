@@ -555,7 +555,8 @@ class StationFactory(object):
                                             param.n_rows,
                                             param.n_columns,
                                             param.element_horiz_spacing,
-                                            param.element_vert_spacing)
+                                            param.element_vert_spacing,
+                                            None)
             scm_station.antenna = np.array([AntennaBeamformingImt(scm_antenna_params, 
                                                                   scm_station.azimuth,
                                                                   scm_station.elevation)])
@@ -566,7 +567,7 @@ class StationFactory(object):
                                                               scm_station.elevation,
                                                               random_number_gen)
             for b in range(param.num_beams):
-                scm_station.antenna.add_beam(phi, theta)
+                scm_station.antenna[0].add_beam(phi[b], theta[b])
         else:
             sys.stderr.write("ERROR\nInvalid SCM antenna pattern: " + param.antenna_pattern)
             sys.exit(1)
@@ -615,10 +616,10 @@ class StationFactory(object):
         phi = random_number_gen.uniform(-scm_coverage_azimuth/2, scm_coverage_azimuth/2, num_beams) + azimuth
         if type.upper() == "BS":
             scm_ue_height = 1.5
-            theta = - np.degrees(np.arctan((height - scm_ue_height)/distance)) - elevation
+            theta = - (np.degrees(np.arctan((height - scm_ue_height)/distance)) - elevation)
         elif type.upper() == "UE":
             scm_bs_height = 6
-            theta = - np.degrees(np.arctan((scm_bs_height - height)/distance))
+            theta = np.degrees(np.arctan((scm_bs_height - height)/distance))
         else:
             sys.stderr.write("ERROR\nInvalid SCM station type: " + type)
             sys.exit(1)
