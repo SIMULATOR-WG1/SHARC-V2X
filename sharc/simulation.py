@@ -247,7 +247,7 @@ class Simulation(ABC, Observable):
         # calculate coupling loss
         coupling_loss = np.squeeze(path_loss - gain_a - gain_b)
 
-        return coupling_loss
+        return coupling_loss if np.shape(coupling_loss) != () else np.array([coupling_loss])
 
     def connect_ue_to_bs(self):
         """
