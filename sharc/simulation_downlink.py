@@ -54,7 +54,8 @@ class SimulationDownlink(Simulation):
         self.ue = StationFactory.generate_imt_ue(self.parameters.imt,
                                                  self.parameters.antenna_imt,
                                                  self.topology, random_number_gen)
-
+        #self.plot_scenario()
+        
         self.connect_ue_to_bs()
         self.select_ue(random_number_gen)
 
@@ -75,7 +76,10 @@ class SimulationDownlink(Simulation):
             # Execute this piece of code if IMT generates interference into
             # the other system
             self.calculate_sinr()
-            self.calculate_external_interference()
+            if self.parameters.general.system == "SCM":
+                self.calculate_external_interference_scm()
+            else:
+                self.calculate_external_interference()
             pass
 
         self.collect_results(write_to_file, snapshot_number)
@@ -228,6 +232,45 @@ class SimulationDownlink(Simulation):
         if self.system.station_type is StationType.RAS:
             self.system.pfd = 10*np.log10(10**(self.system.rx_interference/10)/self.system.antenna[0].effective_area)
 
+
+    def calculate_external_interference_scm(self):
+        """
+        Calculates interference that IMT generates on SCM station
+        """
+        self.coupling_loss_imt_system = self.calculate_coupling_loss(self.system,
+                                                                     self.bs,
+                                                                     self.propagation_system) \
+                                          + self.param_system.polarization_loss
+        
+        rx_interference = -500 * np.ones(self.param_system.num_beams)
+        bs_active = np.where(self.bs.active)[0]
+        for bs in bs_active:
+            active_beams = [i for i in range(bs*self.parameters.imt.ue_k, (bs+1)*self.parameters.imt.ue_k)]
+
+            interference = self.bs.tx_power[bs] - self.parameters.imt.bs_ohmic_loss \
+                             - self.coupling_loss_imt_system[active_beams] \
+                             - self.param_system.ohmic_loss
+
+            rx_interference = 10*np.log10(10**(0.1*rx_interference) + 10**(0.1*interference))
+
+        self.system.rx_interference = rx_interference
+        
+        # bandwidth of each resource block group, keeping in mind that each 
+        # beam is implicitly associated to a resource block group
+        scm_bandwidth = (1 - self.param_system.guard_band_ratio)*self.param_system.bandwidth/self.param_system.num_beams
+        
+        # calculate N
+        self.system.thermal_noise = \
+            10*math.log10(self.param_system.BOLTZMANN_CONSTANT* \
+                          self.system.noise_temperature*1e3) + \
+                          10*math.log10(scm_bandwidth * 1e6)
+
+        # calculate I/N at the SCM station
+        self.system.inr = self.system.rx_interference - self.system.thermal_noise
+            
+            
+            
+            
     def collect_results(self, write_to_file: bool, snapshot_number: int):
         if not self.parameters.imt.interfered_with:
             self.results.system_inr.extend(self.system.inr.tolist())
