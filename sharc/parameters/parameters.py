@@ -400,6 +400,7 @@ class Parameters(object):
         self.scm.max_dist_to_bs = config.getfloat("SCM", "max_dist_to_bs")
         self.scm.frequency = config.getfloat("SCM", "frequency")
         self.scm.bandwidth = config.getfloat("SCM", "bandwidth")
+        self.scm.guard_band_ratio = config.getfloat("SCM", "guard_band_ratio")
         self.scm.noise_temperature = config.getfloat("SCM", "noise_temperature")
         self.scm.adjacent_ch_selectivity = config.getfloat("SCM", "adjacent_ch_selectivity")
         self.scm.inr_scaling = config.getfloat("SCM", "inr_scaling")
@@ -416,6 +417,9 @@ class Parameters(object):
         self.scm.element_vert_spacing = config.getfloat("SCM", "element_vert_spacing")
         self.scm.num_beams = config.getint("SCM", "num_beams")
         self.scm.channel_model = config.get("SCM", "channel_model")
+        self.scm.shadowing = config.getboolean("SCM", "shadowing")
+        self.scm.polarization_loss = config.getfloat("SCM", "polarization_loss")
+        self.scm.ohmic_loss = config.getfloat("SCM", "ohmic_loss")
         self.scm.BOLTZMANN_CONSTANT = config.getfloat("SCM", "BOLTZMANN_CONSTANT")
         self.scm.EARTH_RADIUS = config.getfloat("SCM", "EARTH_RADIUS")
        
