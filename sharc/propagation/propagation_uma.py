@@ -225,8 +225,10 @@ if __name__ == '__main__':
     distance_2D = np.column_stack((np.linspace(1, 10000, num=10000)[:,np.newaxis],
                                    np.linspace(1, 10000, num=10000)[:,np.newaxis],
                                    np.linspace(1, 10000, num=10000)[:,np.newaxis]))
-    h_ue = np.array([1.5, 17, 23])
-    uma = PropagationUMa()
+    #h_ue = np.array([1.5, 17, 23])
+    h_ue = np.array([10])
+    random_number_gen = np.random.RandomState(100)
+    uma = PropagationUMa(random_number_gen)
 
     los_probability = np.empty(distance_2D.shape)
     name = list()
@@ -255,15 +257,15 @@ if __name__ == '__main__':
     from propagation_free_space import PropagationFreeSpace
     shadowing_std = 0
     distance_2D = np.linspace(1, 10000, num=10000)[:,np.newaxis]
-    freq = 27000*np.ones(distance_2D.shape)
+    freq = 39750*np.ones(distance_2D.shape)
     h_bs = 25*np.ones(len(distance_2D[:,0]))
-    h_ue = 1.5*np.ones(len(distance_2D[0,:]))
+    h_ue = 10*np.ones(len(distance_2D[0,:]))
     h_e = np.zeros(distance_2D.shape)
     distance_3D = np.sqrt(distance_2D**2 + (h_bs[:,np.newaxis] - h_ue)**2)
 
     loss_los = uma.get_loss_los(distance_2D, distance_3D, freq, h_bs, h_ue, h_e, shadowing_std)
     loss_nlos = uma.get_loss_nlos(distance_2D, distance_3D, freq, h_bs, h_ue, h_e, shadowing_std)
-    loss_fs = PropagationFreeSpace().get_loss(distance_2D=distance_2D, frequency=freq)
+    loss_fs = PropagationFreeSpace(random_number_gen).get_loss(distance_2D=distance_2D, frequency=freq)
     
     fig = plt.figure(figsize=(8,6), facecolor='w', edgecolor='k')
     ax = fig.gca()
