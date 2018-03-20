@@ -21,9 +21,11 @@ class RASSingleBSInterfererTest(unittest.TestCase):
     def setUp(self):
         # Plot flag: if true, test will generate plots
         self.plot_flag = True
-        
         # RAS distances to be used [km]
-        self.ras_distances = np.arange(2,100,2)
+        self.ras_distances = np.arange(1,40,1)
+        # For a given distance, the interference is calculated for and averaged
+        # over self.num_dorps
+        self.num_drops = 100
         
         self.param = Parameters()
 
@@ -225,10 +227,16 @@ class RASSingleBSInterfererTest(unittest.TestCase):
         for k,dist in enumerate(self.ras_distances):
             # Convert distance to meters
             self.simulation.system.x = np.array([dist*1000])
+            
             # Calculate interference
-            self.simulation.calculate_external_interference()
-            # Convert it to dBW and save
-            interf[k] = self.simulation.system.rx_interference + 30
+            interf_sum = 0
+            for j in range(self.num_drops):
+                self.simulation.calculate_external_interference()
+                # Add and convert to dBW
+                interf_sum += self.simulation.system.rx_interference - 30
+                
+            # Average interference
+            interf[k] = interf_sum/self.num_drops
             
         # Plot results
         if self.plot_flag:
