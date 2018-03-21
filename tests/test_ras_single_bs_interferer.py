@@ -25,7 +25,7 @@ class RASSingleBSInterfererTest(unittest.TestCase):
         self.ras_distances = np.arange(1,40,1)
         # For a given distance, the interference is calculated for and averaged
         # over self.num_dorps
-        self.num_drops = 100
+        self.num_drops = 1000
         
         self.param = Parameters()
 
@@ -222,29 +222,81 @@ class RASSingleBSInterfererTest(unittest.TestCase):
         self.simulation.system.x = np.array([0])
         self.simulation.system.y = np.array([0])
         
+        # Test gains
+        gains = self.simulation.calculate_gains(self.simulation.system,self.simulation.bs)
+        npt.assert_equal(gains,np.array([[0]]))
+        
         # Loop through RAS distances
         interf = np.zeros_like(self.ras_distances)
+        adj_coupling_loss = np.zeros_like(self.ras_distances)
+        bs_gain = np.zeros_like(self.ras_distances)
+        ras_gain = np.zeros_like(self.ras_distances)
         for k,dist in enumerate(self.ras_distances):
             # Convert distance to meters
             self.simulation.system.x = np.array([dist*1000])
             
             # Calculate interference
             interf_sum = 0
+            coupling_loss_sum = 0
             for j in range(self.num_drops):
                 self.simulation.calculate_external_interference()
                 # Add and convert to dBW
                 interf_sum += self.simulation.system.rx_interference - 30
+#                # TODO: use our implementation of BF normalization
+#                interf_sum += 4.83
+                # Add coupling loss
+                coupling_loss_sum += self.simulation.coupling_loss_imt_system_adjacent
                 
             # Average interference
             interf[k] = interf_sum/self.num_drops
+            adj_coupling_loss[k] = coupling_loss_sum/self.num_drops
+            bs_gain[k] = np.squeeze(self.simulation.imt_system_antenna_gain)
+            ras_gain[k] = np.squeeze(self.simulation.system_imt_antenna_gain)
+            
+        # Get path loss
+        path_loss = adj_coupling_loss + bs_gain + ras_gain
             
         # Plot results
         if self.plot_flag:
+            # Plot Rx interference
             plt.plot(self.ras_distances,interf,label='RAS Rx Interference')
             plt.xlabel('Distance [km]')
             plt.ylabel('Interference [dBW]')
             plt.grid(True)
             plt.show()
+            plt.clf()
+            
+            # Plot BS to RAS coupling loss
+            plt.plot(self.ras_distances,adj_coupling_loss,label='RAS to BS coupling loss')
+            plt.xlabel('Distance [km]')
+            plt.ylabel('Coupling loss [dB]')
+            plt.grid(True)
+            plt.show()
+            plt.clf()
+            
+            # Plot BS to RAS path loss
+            plt.plot(self.ras_distances,path_loss,label='RAS to BS path loss')
+            plt.xlabel('Distance [km]')
+            plt.ylabel('Path loss [dB]')
+            plt.grid(True)
+            plt.show()
+            plt.clf()
+            
+            # Plot BS gain towards RAS
+            plt.plot(self.ras_distances,bs_gain,label='BS antenna gain towards RAS')
+            plt.xlabel('Distance [km]')
+            plt.ylabel('BS antenna gain [dBi]')
+            plt.grid(True)
+            plt.show()
+            plt.clf()
+            
+            # Plot RAS gain towards BS
+            plt.plot(self.ras_distances,ras_gain,label='RAS antenna gain towards BS')
+            plt.xlabel('Distance [km]')
+            plt.ylabel('RAS antenna gain [dBi]')
+            plt.grid(True)
+            plt.show()
+            plt.clf()
 
         
 if __name__ == '__main__':
