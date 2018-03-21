@@ -22,7 +22,7 @@ class RASSingleBSInterfererTest(unittest.TestCase):
         # Plot flag: if true, test will generate plots
         self.plot_flag = True
         # RAS distances to be used [km]
-        self.ras_distances = np.arange(1,40,1)
+        self.ras_distances = np.arange(1,100,1,dtype=float)
         # For a given distance, the interference is calculated for and averaged
         # over self.num_dorps
         self.num_drops = 1000
@@ -169,7 +169,7 @@ class RASSingleBSInterfererTest(unittest.TestCase):
         self.param.ras.epsilon = 3.5
         self.param.ras.hm = 15
         self.param.ras.elevation_angle_facade = 0
-        self.param.ras.probability_loss_notExceeded = 0.02
+        self.param.ras.probability_loss_notExceeded = 0.98
         self.param.ras.thetaJ = 0.3
         self.param.ras.par_ep = 0.8
         self.param.ras.Beta_0 = 60
@@ -233,7 +233,7 @@ class RASSingleBSInterfererTest(unittest.TestCase):
         ras_gain = np.zeros_like(self.ras_distances)
         for k,dist in enumerate(self.ras_distances):
             # Convert distance to meters
-            self.simulation.system.x = np.array([dist*1000])
+            self.simulation.system.x = np.array([dist*1000.0])
             
             # Calculate interference
             interf_sum = 0
@@ -242,8 +242,8 @@ class RASSingleBSInterfererTest(unittest.TestCase):
                 self.simulation.calculate_external_interference()
                 # Add and convert to dBW
                 interf_sum += self.simulation.system.rx_interference - 30
-#                # TODO: use our implementation of BF normalization
-#                interf_sum += 4.83
+                # TODO: use our implementation of BF normalization
+                interf_sum += 4.83
                 # Add coupling loss
                 coupling_loss_sum += self.simulation.coupling_loss_imt_system_adjacent
                 
@@ -260,6 +260,9 @@ class RASSingleBSInterfererTest(unittest.TestCase):
         if self.plot_flag:
             # Plot Rx interference
             plt.plot(self.ras_distances,interf,label='RAS Rx Interference')
+            protection = -191.0*np.ones_like(self.ras_distances)
+            plt.plot(self.ras_distances,protection,'r',label='Protection Criteria')
+            plt.legend()
             plt.xlabel('Distance [km]')
             plt.ylabel('Interference [dBW]')
             plt.grid(True)
