@@ -70,7 +70,7 @@ class PropagationDuctingReflection(Propagation):
 
 
         if (abs(phi)<=70):
-            mu4 = 10**(-0.935 + 0.0176*abs(phi)*np.log10(mu1))
+            mu4 = 10**((-0.935 + 0.0176*abs(phi))*np.log10(mu1))
         else:
             mu4 = 10**(0.3*np.log10(mu1))
 

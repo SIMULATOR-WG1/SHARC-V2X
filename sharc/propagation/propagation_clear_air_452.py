@@ -55,18 +55,7 @@ class PropagationClearAir(Propagation):
         self.D3 = 0.001308
 
         self.dsw = 20
-        self.k = 0.5
-
-        ###########################################################################
-        # The distance of the i-th profile point
-        self.dist_di = [0,0,0]
-        #self.dist_di = [.1,.2,.5]
-
-
-        ###########################################################################
-        #Height of the i-th profile point
-        self.height_hi = [2.2,4.3,6.4]
-        #self.height_hi = [22, 100, 64]
+        self.kappa = 0.5
 
     def get_loss(self, *args, **kwargs) -> np.array:
 
@@ -117,10 +106,12 @@ class PropagationClearAir(Propagation):
         thetaJ = np.asarray(es_params.thetaJ)
         ep = np.asarray(es_params.par_ep)
         dsw = np.asarray(self.dsw)
-        k = np.asarray(self.k)
-        di = kwargs.pop("di",self.dist_di)
-        hi = kwargs.pop("hi",self.height_hi)
+        k = np.asarray(self.kappa)
         n = np.asarray(es_params.eta)
+        
+        # Profile: Smooth Earth
+        di = np.linspace(0,100,num=50)
+        hi = np.zeros_like(di)
 
         Stim = -np.inf * np.ones(d_km.size)
 
@@ -129,7 +120,7 @@ class PropagationClearAir(Propagation):
         mu1 = (10**(-dtm/(16 - 6.6*tau)) + (10**-(0.496 + 0.354*tau))**5)**0.2
 
         if (abs(phi)<=70):
-           mu4 = 10**(-0.935 + 0.0176*abs(phi)*np.log10(mu1))
+           mu4 = 10**((-0.935 + 0.0176*abs(phi))*np.log10(mu1))
         else:
            mu4 = 10**(0.3*np.log10(mu1))
 
@@ -142,21 +133,15 @@ class PropagationClearAir(Propagation):
         k50 = 157/(157 - deltaN)
         ae = 6371*k50
         Ce = 1/ae
-
-        val_hi =len(hi)
-
         # for i in range(0, val_hi,1):
         #     Stim_old = (hi[i] + 500*Ce*di[i]*(d_km - di[i]) - Hts)/di[i]
         #
         #     if Stim_old>Stim:
         #        Stim = Stim_old
 
-        for k in range(d_km.size):
-            for i in range(0, val_hi,1):
-                Stim_old = (hi[i] + 500*Ce*di[i]*(d_km[0,k] - di[i]) - Hts)/di[i]
-
-                if Stim_old>Stim[k]:
-                   Stim[k] = Stim_old
+        for count in range(d_km.size):
+            Stim_old = (hi + 500*Ce*di*(d_km[0,count] - di) - Hts)/di
+            Stim[count] = np.amax(Stim_old)
 
         Str = (Hrs - Hts)/d_km
 
@@ -239,7 +224,7 @@ class PropagationClearAir(Propagation):
 
         Lbda = Lbd
         index = np.where(Lminbap[0,:] <= Lbd[0,:])
-        if index[0].size:
+        if index[0].size: # Matlab enters here ours too
             Lbda[index] = Lminbap + (Lbd[index] - Lminbap)*Fk
 
         Lbam = Lbda + (Lminb0p - Lbda)*Fj
@@ -261,9 +246,96 @@ class PropagationClearAir(Propagation):
 
         Lb = -5*np.log10(10**(-0.2*Lbs) + 10**(-0.2*Lbam))  + clutter_loss + building_loss
 
-
-
-
         #print(Lb)
         return Lb
 
+if __name__ == '__main__':
+    
+    import matplotlib.pyplot as plt
+    from pprint import pprint
+    import warnings
+    
+    from sharc.parameters.parameters_ras import ParametersRas
+    
+    # Function input parameters
+    d = 100.0*1e3*np.array([[1]])                 # Distance in meters
+    freq = 43000.0*np.array([[1]])                # Frequency in GHz
+    indoor_stas = np.array([[False]], dtype=bool)
+    elevation_angles = None                       # Parameter not used by P452
+    tx_antenna_gain = 0.0*np.array([[1]])
+    rx_antenna_gain = 0.0*np.array([[1]])
+    sectors_in_node = 1
+    
+    # Simulation input parameters
+    params = ParametersRas()
+    params.atmospheric_pressure = 1013              # Input par
+    params.air_temperature = 288                    # Input par
+    params.water_vapour = 7.5                       # Got from Matlab code
+    params.theta_tx = -1.3928                       # Got from Matlab P452 GUI. Called theta_t there
+    params.theta_rx = -1.3928                       # Got from Matlab P452 GUI. Called theta_r there
+    params.N0 = 355                                 # Input par
+    params.delta_N = 60                             # Input par
+    params.percentage_p = 2                         # Input par
+    params.Dlt = 14.1414                            # Got from Matlab P452 GUI
+    params.Dlr = 14.1414                            # Got from Matlab P452 GUI
+    params.Dct = 500                                # Input par
+    params.Dcr = 500                                # Input par
+    params.Hts = 10                                 # Got from Matlab P452 GUI
+    params.Hrs =10                                  # Got from Matlab P452 GUI
+    params.Hst = 0                                  # Got from Matlab P452 GUI
+    params.Hsr = 0                                  # Got from Matlab P452 GUI
+    params.H0 = 0                                   # Got from Matlab code
+    params.Hn = 0                                   # Got from Matlab code
+    params.Hte = 10                                 # Got from Matlab P452 GUI
+    params.Hre = 10                                 # Got from Matlab P452 GUI
+    params.omega = 0                                # Got from Matlab code
+    params.phi = 0                                  # Got from Matlab code
+    params.dtm = 100                                # Got from Matlab P452 GUI
+    params.dlm = 100                                # Got from Matlab P452 GUI
+    params.epsilon = 3.5                            # Fixed at 3.5 on Matlab
+    params.hm = 0                                   # Got from Matlab P452 GUI
+    params.elevation_angle_facade = 0               # Parameter not used here
+    params.probability_loss_notExceeded = 0.9       # Parameter not used here
+    params.thetaJ = 0.3                             # Fixed at 0.3 on Matlab
+    params.par_ep = 0.8                             # Fixed at 0.8 on Matlab. Called KSI on Matlab
+    params.Beta_0 = 41.1860                         # Got from Matlab P452 GUI
+    params.eta = 2.5                                # Fixed at 2.5 on Matlab
+    params.clutter_loss = False
+    
+    # Create object
+    seed = 11
+    random_number_gen = np.random.RandomState(seed)
+    propagation = PropagationClearAir(random_number_gen)
+    
+    # Calculate Path Loss
+    with warnings.catch_warnings(record=True) as warns:
+        warnings.simplefilter("once")
+        path_loss = propagation.get_loss(distance_3D=d,
+                                         frequency=freq,
+                                         indoor_stations=indoor_stas,
+                                         elevation=elevation_angles,
+                                         es_params=params,
+                                         tx_gain = tx_antenna_gain,
+                                         rx_gain = rx_antenna_gain,
+                                         number_of_sectors=sectors_in_node)
+    for wa in warns:
+        print('\n\n\n', wa.message, wa.category, wa.filename, wa.lineno)
+    print('________\n\n')
+    
+    # Print all inputs
+    print('\n\n PARAMETERS:\n\n')
+    print('distance = {}'.format(d))
+    print('frequency = {}'.format(freq))
+    print('indoor_stations = {}'.format(indoor_stas))
+    print('elevation = {}'.format(elevation_angles))
+    print('es_params = ')
+    pprint(vars(params))
+    print('tx_gain = {}'.format(tx_antenna_gain))
+    print('rx_antenna_gain = {}'.format(tx_antenna_gain))
+    print('number_of_sectors = {}'.format(sectors_in_node))
+    
+    # Print loss
+    print('\n\n PATH LOSS:\n')
+    print('path_loss = {}'.format(path_loss))
+    
+    

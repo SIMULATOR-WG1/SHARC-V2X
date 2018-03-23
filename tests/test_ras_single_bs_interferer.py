@@ -25,7 +25,7 @@ class RASSingleBSInterfererTest(unittest.TestCase):
         self.ras_distances = np.arange(1,100,1,dtype=float)
         # For a given distance, the interference is calculated for and averaged
         # over self.num_dorps
-        self.num_drops = 1000
+        self.num_drops = 1
         
         self.param = Parameters()
 
@@ -140,41 +140,41 @@ class RASSingleBSInterfererTest(unittest.TestCase):
         self.param.ras.BOLTZMANN_CONSTANT = 1.38064852e-23
         self.param.ras.EARTH_RADIUS = 6371000
         self.param.ras.SPEED_OF_LIGHT = 299792458
-          
+        
         # P452 parameters
-        self.param.ras.atmospheric_pressure = 1013
-        self.param.ras.air_temperature = 288
-        self.param.ras.water_vapour = 3
-        self.param.ras.theta_tx = 20
-        self.param.ras.theta_rx = 20
-        self.param.ras.N0 = 355
-        self.param.ras.delta_N = 60
-        self.param.ras.percentage_p = 40
-        self.param.ras.Dlt = 9
-        self.param.ras.Dlr = 25
-        self.param.ras.Dct = 10000
-        self.param.ras.Dcr = 10000
-        self.param.ras.Hts = 9
-        self.param.ras.Hrs = 50
-        self.param.ras.Hst = 0
-        self.param.ras.Hsr = 0
-        self.param.ras.H0 = 0
-        self.param.ras.Hn = 0
-        self.param.ras.Hte = 6
-        self.param.ras.Hre = 50
-        self.param.ras.omega = 0
-        self.param.ras.phi = 30
-        self.param.ras.dtm = 0.8
-        self.param.ras.dlm = 0.8
-        self.param.ras.epsilon = 3.5
-        self.param.ras.hm = 15
-        self.param.ras.elevation_angle_facade = 0
-        self.param.ras.probability_loss_notExceeded = 0.98
-        self.param.ras.thetaJ = 0.3
-        self.param.ras.par_ep = 0.8
-        self.param.ras.Beta_0 = 60
-        self.param.ras.eta = 2.5
-        self.param.ras.clutter_loss = True
+        self.param.ras.atmospheric_pressure = 1013              # Input par
+        self.param.ras.air_temperature = 288                    # Input par
+        self.param.ras.water_vapour = 7.5                       # Got from Matlab code
+        self.param.ras.theta_tx = -1.3928                       # Got from Matlab P452 GUI. Called theta_t there
+        self.param.ras.theta_rx = -1.3928                       # Got from Matlab P452 GUI. Called theta_r there
+        self.param.ras.N0 = 355                                 # Input par
+        self.param.ras.delta_N = 60                             # Input par
+        self.param.ras.percentage_p = 2                         # Input par
+        self.param.ras.Dlt = 14.1414                            # Got from Matlab P452 GUI
+        self.param.ras.Dlr = 14.1414                            # Got from Matlab P452 GUI
+        self.param.ras.Dct = 500                                # Input par
+        self.param.ras.Dcr = 500                                # Input par
+        self.param.ras.Hts = 10                                 # Got from Matlab P452 GUI
+        self.param.ras.Hrs =10                                  # Got from Matlab P452 GUI
+        self.param.ras.Hst = 0                                  # Got from Matlab P452 GUI
+        self.param.ras.Hsr = 0                                  # Got from Matlab P452 GUI
+        self.param.ras.H0 = 0                                   # Got from Matlab code
+        self.param.ras.Hn = 0                                   # Got from Matlab code
+        self.param.ras.Hte = 10                                 # Got from Matlab P452 GUI
+        self.param.ras.Hre = 10                                 # Got from Matlab P452 GUI
+        self.param.ras.omega = 0                                # Got from Matlab code
+        self.param.ras.phi = 0                                  # Got from Matlab code
+        self.param.ras.dtm = 100                                # Got from Matlab P452 GUI
+        self.param.ras.dlm = 100                                # Got from Matlab P452 GUI
+        self.param.ras.epsilon = 3.5                            # Fixed at 3.5 on Matlab
+        self.param.ras.hm = 0                                   # Got from Matlab P452 GUI
+        self.param.ras.elevation_angle_facade = 0               # Parameter not used here
+        self.param.ras.probability_loss_notExceeded = 0.9       # Parameter not used here
+        self.param.ras.thetaJ = 0.3                             # Fixed at 0.3 on Matlab
+        self.param.ras.par_ep = 0.8                             # Fixed at 0.8 on Matlab. Called KSI on Matlab
+        self.param.ras.Beta_0 = 41.1860                         # Got from Matlab P452 GUI
+        self.param.ras.eta = 2.5                                # Fixed at 2.5 on Matlab
+        self.param.ras.clutter_loss = False
         
     def test_ras_bs_adjacent_urban(self):
         # Create simulation object

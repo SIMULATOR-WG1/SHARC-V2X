@@ -67,9 +67,9 @@ class PropagationDiffraction(Propagation):
 
         kbeta = 3
         polarization = 'horizontal'
-        Hi = [0,0,0]
-        aobt_1 = [-np.inf,-np.inf,-np.inf]
-        aobr_1 = [-np.inf,-np.inf,-np.inf]
+        Hi = np.zeros_like(hi)
+        aobt_1 = -np.inf*np.ones_like(hi)
+        aobr_1 = -np.inf*np.ones_like(hi)
         Stim_max = -np.inf
         Srim_max = -np.inf
         vmax = -np.inf
@@ -130,7 +130,7 @@ class PropagationDiffraction(Propagation):
             if(p==1):
                 hts = hts_n
                 hrs = hrs_n
-                hi = [0,0,0]
+                hi = np.zeros_like(di)
 
             for i in range(0, val_hi,1):
 
