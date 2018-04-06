@@ -123,10 +123,10 @@ class StationFactory(object):
         ue_y = list()
 
         # Calculate UE pointing
-        azimuth_range = (-60, 60)
+        azimuth_range = (-10, 10)
         azimuth = (azimuth_range[1] - azimuth_range[0])*random_number_gen.random_sample(num_ue) + azimuth_range[0]
         # Remove the randomness from azimuth and you will have a perfect pointing
-        elevation_range = (-90, 90)
+        elevation_range = (-10, 10)
         elevation = (elevation_range[1] - elevation_range[0])*random_number_gen.random_sample(num_ue) + \
                     elevation_range[0]
 
@@ -158,7 +158,8 @@ class StationFactory(object):
                 radius_scale = topology.cell_radius / 3.0345
                 radius = random_number_gen.rayleigh(radius_scale, num_ue)
             elif param.ue_distribution_distance.upper() == "UNIFORM":
-                radius = topology.cell_radius * random_number_gen.random_sample(num_ue)
+                radius = (topology.cell_radius - param.minimum_separation_distance_bs_ue) \
+                    * random_number_gen.random_sample(num_ue) + param.minimum_separation_distance_bs_ue
             else:
                 sys.stderr.write("ERROR\nInvalid UE distance distribution: " + param.ue_distribution_distance)
                 sys.exit(1)

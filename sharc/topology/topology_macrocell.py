@@ -20,7 +20,7 @@ class TopologyMacrocell(Topology):
 
     # possible values for base station azimuth and elevation [degrees]
     AZIMUTH = [60, 180, 300]
-    ELEVATION = -10
+    ELEVATION = -15
 
     ALLOWED_NUM_CLUSTERS = [1, 7]
 

@@ -242,22 +242,30 @@ class SimulationDownlink(Simulation):
                                                                      self.propagation_system) \
                                           + self.param_system.polarization_loss
         
-        rx_interference = -500 * np.ones(self.param_system.num_beams)
+        rx_interference = np.zeros(self.param_system.num_beams)
+        
         bs_active = np.where(self.bs.active)[0]
-        for bs in bs_active:
-            active_beams = [i for i in range(bs*self.parameters.imt.ue_k, (bs+1)*self.parameters.imt.ue_k)]
-
-            interference = self.bs.tx_power[bs] - self.parameters.imt.bs_ohmic_loss \
-                             - self.coupling_loss_imt_system[active_beams] \
-                             - self.param_system.ohmic_loss
-
-            rx_interference = 10*np.log10(10**(0.1*rx_interference) + 10**(0.1*interference))
-
-        self.system.rx_interference = rx_interference
+        if self.param_system.type == "BS":
+            for bs in bs_active:
+                active_beams = [i for i in range(bs*self.parameters.imt.ue_k, (bs+1)*self.parameters.imt.ue_k)]
+    
+                interference = self.bs.tx_power[bs] - self.parameters.imt.bs_ohmic_loss \
+                                 - self.coupling_loss_imt_system[active_beams] \
+                                 - self.param_system.ohmic_loss
+    
+                rx_interference += 10**(0.1*interference)
+        else:
+            for bs in bs_active:
+                interference = self.bs.tx_power[bs][0] - self.parameters.imt.bs_ohmic_loss \
+                                     - self.coupling_loss_imt_system[bs] \
+                                     - self.param_system.ohmic_loss
+                rx_interference += 10**(0.1*interference)
+                                 
+        self.system.rx_interference = 10*np.log10(rx_interference)
         
         # bandwidth of each resource block group, keeping in mind that each 
         # beam is implicitly associated to a resource block group
-        scm_bandwidth = (1 - self.param_system.guard_band_ratio)*self.param_system.bandwidth/self.param_system.num_beams
+        scm_bandwidth = self.param_system.bandwidth
         
         # calculate N
         self.system.thermal_noise = \
@@ -306,9 +314,13 @@ class SimulationDownlink(Simulation):
                 self.results.system_imt_antenna_gain.extend(self.system_imt_antenna_gain[0,ue])
                 self.results.imt_system_antenna_gain.extend(self.imt_system_antenna_gain[0,ue])
             else:
-                active_beams = [i for i in range(bs*self.parameters.imt.ue_k, (bs+1)*self.parameters.imt.ue_k)]
-                self.results.system_imt_antenna_gain.extend(self.system_imt_antenna_gain[0,active_beams])
-                self.results.imt_system_antenna_gain.extend(self.imt_system_antenna_gain[0,active_beams])
+                if self.parameters.general.system == "SCM" and self.parameters.scm.type == "BS":
+                    active_beams = [i for i in range(bs*self.parameters.imt.ue_k, (bs+1)*self.parameters.imt.ue_k)]
+                    self.results.system_imt_antenna_gain.extend(self.system_imt_antenna_gain[0,active_beams])
+                    self.results.imt_system_antenna_gain.extend(self.imt_system_antenna_gain[0,active_beams])
+                else:
+                    self.results.system_imt_antenna_gain.extend([self.system_imt_antenna_gain[0,bs]])
+                    self.results.imt_system_antenna_gain.extend([self.imt_system_antenna_gain[0,bs]])                    
 
             self.results.imt_dl_tx_power.extend(self.bs.tx_power[bs].tolist())
 

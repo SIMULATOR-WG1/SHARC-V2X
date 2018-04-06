@@ -78,7 +78,10 @@ class SimulationUplink(Simulation):
             # Execute this piece of code if IMT generates interference into
             # the other system
             self.calculate_sinr()
-            self.calculate_external_interference()
+            if self.parameters.general.system == "SCM":
+                self.calculate_external_interference_scm()
+            else:
+                self.calculate_external_interference()
             #self.calculate_external_degradation()
             pass
 
@@ -228,6 +231,39 @@ class SimulationUplink(Simulation):
         if self.system.station_type is StationType.RAS:
             self.system.pfd = 10*np.log10(10**(self.system.rx_interference/10)/self.system.antenna[0].effective_area)
 
+            
+    def calculate_external_interference_scm(self):
+        """
+        Calculates aggregated interference that IMT system generates on SCM
+        """
+        self.coupling_loss_imt_system = self.calculate_coupling_loss(self.system,
+                                                                     self.ue,
+                                                                     self.propagation_system)
+        rx_interference = np.zeros(self.param_system.num_beams)
+        bs_active = np.where(self.bs.active)[0]
+        for bs in bs_active:
+            ue = self.link[bs]
+            interference_ue = self.ue.tx_power[ue] - self.parameters.imt.ue_ohmic_loss \
+                              - self.coupling_loss_imt_system[ue] \
+                              - self.param_system.ohmic_loss
+            rx_interference += 10**(0.1*interference_ue)
+
+        self.system.rx_interference = 10*np.log10(rx_interference)
+        
+        # bandwidth of each resource block group, keeping in mind that each 
+        # beam is implicitly associated to a resource block group
+        scm_bandwidth = (1 - self.param_system.guard_band_ratio)*self.param_system.bandwidth/self.param_system.num_beams
+        
+        # calculate N
+        self.system.thermal_noise = \
+            10*np.log10(self.param_system.BOLTZMANN_CONSTANT* \
+                          self.system.noise_temperature*1e3) + \
+                          10*math.log10(scm_bandwidth * 1e6)
+
+        # calculate I/N at the SCM station
+        self.system.inr = self.system.rx_interference - self.system.thermal_noise
+          
+            
 
     def collect_results(self, write_to_file: bool, snapshot_number: int):
         if not self.parameters.imt.interfered_with:
