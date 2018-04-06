@@ -110,6 +110,9 @@ class Parameters(object):
         #######################################################################
         # IMT ANTENNA
         #######################################################################
+        self.antenna_imt.ue_antenna_type         = config.get("IMT_ANTENNA", "ue_antenna_type")
+        self.antenna_imt.peak_gain        = config.getfloat("IMT_ANTENNA", "peak_gain")
+        self.antenna_imt.diameter        = config.getfloat("IMT_ANTENNA", "diameter")
         self.antenna_imt.normalization              = config.getboolean("IMT_ANTENNA", "beamforming_normalization")
         self.antenna_imt.bs_normalization_file          = config.get("IMT_ANTENNA", "bs_normalization_file")
         self.antenna_imt.ue_normalization_file          = config.get("IMT_ANTENNA", "ue_normalization_file")

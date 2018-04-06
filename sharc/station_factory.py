@@ -34,6 +34,8 @@ from sharc.antenna.antenna_s672 import AntennaS672
 from sharc.antenna.antenna_s1528 import AntennaS1528
 from sharc.antenna.antenna_s1855 import AntennaS1855
 from sharc.antenna.antenna_sa509 import AntennaSA509
+from sharc.antenna.antenna_f1245 import AntennaF1245
+from sharc.antenna.antenna_res122 import AntennaRes122
 from sharc.antenna.antenna_beamforming_imt import AntennaBeamformingImt
 from sharc.topology.topology import Topology
 from sharc.topology.topology_macrocell import TopologyMacrocell
@@ -215,9 +217,16 @@ class StationFactory(object):
 
         # TODO: this piece of code works only for uplink
         par = param_ant.get_antenna_parameters("UE","TX")
-        for i in range(num_ue):
-            imt_ue.antenna[i] = AntennaBeamformingImt(par, imt_ue.azimuth[i],
-                                                           imt_ue.elevation[i])
+        if param_ant.ue_antenna_type == 'BEAMFORMING':
+            for i in range(num_ue):
+                imt_ue.antenna[i] = AntennaBeamformingImt(par, imt_ue.azimuth[i],
+                                                               imt_ue.elevation[i])
+        elif param_ant.ue_antenna_type == 'F1245':
+            for i in range(num_ue):
+                imt_ue.antenna[i] = AntennaF1245(param,param_ant)
+        elif param_ant.ue_antenna_type == 'RES122':
+            for i in range(num_ue):
+                imt_ue.antenna[i] = AntennaRes122(param,param_ant)
 
         #imt_ue.antenna = [AntennaOmni(0) for bs in range(num_ue)]
         imt_ue.bandwidth = param.bandwidth*np.ones(num_ue)
