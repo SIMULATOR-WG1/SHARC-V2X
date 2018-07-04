@@ -28,6 +28,8 @@ class Topology(object):
         self.indoor = np.empty(0)
         self.num_base_stations = -1
         self.static_base_stations = False
+        self.x_block = np.empty(0)
+        self.y_block = np.empty(0)
 
 
     @abstractmethod

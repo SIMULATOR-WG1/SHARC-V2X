@@ -10,6 +10,7 @@ from sharc.topology.topology import Topology
 from sharc.topology.topology_macrocell import TopologyMacrocell
 from sharc.topology.topology_hotspot import TopologyHotspot
 from sharc.topology.topology_indoor import TopologyIndoor
+from sharc.topology.topology_v2i import TopologyV2i
 from sharc.topology.topology_single_base_station import TopologySingleBaseStation
 from sharc.parameters.parameters import Parameters
 
@@ -25,6 +26,8 @@ class TopologyFactory(object):
             return TopologyHotspot(parameters.hotspot, parameters.imt.intersite_distance, parameters.imt.num_clusters)
         elif parameters.imt.topology == "INDOOR":
             return TopologyIndoor(parameters.indoor)
+        elif parameters.imt.topology == "V2I":
+            return TopologyV2i(parameters.v2i)
         else:
             sys.stderr.write("ERROR\nInvalid topology: " + parameters.imt.topology)
             sys.exit(1)            

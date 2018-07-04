@@ -53,7 +53,7 @@ class SimulationUplink(Simulation):
         self.ue = StationFactory.generate_imt_ue(self.parameters.imt,
                                                  self.parameters.antenna_imt,
                                                  self.topology, random_number_gen)
-        #self.plot_scenario()
+        self.plot_scenario()
 
         self.connect_ue_to_bs()
         self.select_ue(random_number_gen)
