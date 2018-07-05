@@ -38,3 +38,4 @@ class StationType(Enum):
     HAPS   = 6  # HAPS (airbone) station
     RNS    = 7  # Radionavigation service
     RAS    = 8  # Radio Astronomy Service
+    V2X_V  = 9  # Veicle to Infrastructure/Veicle - Veicle

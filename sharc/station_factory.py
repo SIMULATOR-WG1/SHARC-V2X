@@ -3,15 +3,18 @@
 Created on Thu Mar 23 16:37:32 2017
 
 @author: edgar
-"""
+    """
 
 import numpy as np
 import sys
 import math
+import matplotlib.path as mpltPath
+import matplotlib.pyplot as plt
 
 from sharc.support.enumerations import StationType
 from sharc.parameters.parameters import Parameters
 from sharc.parameters.parameters_imt import ParametersImt
+from sharc.parameters.parameters_v2i import ParametersV2i
 from sharc.parameters.parameters_antenna_imt import ParametersAntennaImt
 from sharc.parameters.parameters_fs import ParametersFs
 from sharc.parameters.parameters_fss_ss import ParametersFssSs
@@ -37,6 +40,7 @@ from sharc.antenna.antenna_sa509 import AntennaSA509
 from sharc.antenna.antenna_beamforming_imt import AntennaBeamformingImt
 from sharc.topology.topology import Topology
 from sharc.topology.topology_macrocell import TopologyMacrocell
+from sharc.topology.topology_v2i import TopologyV2i
 from sharc.spectral_mask_3gpp import SpectralMask3Gpp
 
 
@@ -339,7 +343,135 @@ class StationFactory(object):
 
         return imt_ue
 
+    @staticmethod
+    def generate_v2i_v(param: ParametersV2i,
+                               param_ant: ParametersAntennaImt,
+                               random_number_gen: np.random.RandomState,
+                               topology: Topology) -> StationManager:
+        num_bs = topology.num_base_stations
+        # According ETSI TR 102 681 veicle quantity for the 5x5 grid
+        num_v_per_grid = 37   # represents 290 veicles per grid, for reference grid exist 8 streeits 290/8=36.25
+        num_v = num_bs*num_v_per_grid
 
+        v2i_v = StationManager(num_v)
+        v2i_v.station_type = StationType.V2X_V
+        v_x = list()
+        v_y = list()
+        v_x2 = list()
+        v_y2 = list()
+
+        # initially set all Veicles as outdoor
+        v2i_v.v2i = np.ones(num_v, dtype=bool)
+
+        # Calculate V pointing
+        azimuth_range = (-60, 60)
+        azimuth = (azimuth_range[1] - azimuth_range[0])*random_number_gen.random_sample(num_v) + azimuth_range[0]
+        # Remove the randomness from azimuth and you will have a perfect pointing
+        #azimuth = np.zeros(num_ue)
+        elevation_range = (-90, 90)
+        elevation = (elevation_range[1] - elevation_range[0])*random_number_gen.random_sample(num_v) + elevation_range[0]
+
+
+        # veicles inside streets for reference grid
+        for b in range(8):  # Each block of reference grid 5x5
+            delta_x = (topology.b_w/math.sqrt(topology.ue_indoor_percent) - topology.b_w)/2
+            delta_y = (topology.b_d/math.sqrt(topology.ue_indoor_percent) - topology.b_d)/2
+            
+            if b < 4:
+                x_min = topology.x[0] - topology.cell_radius
+                x_max = topology.x[0] + topology.cell_radius     
+                y_min = topology.y[0] + (b-1)*(topology.b_w + topology.street_width)  - topology.street_width/2
+                y_max = topology.y[0] + (b-1)*(topology.b_w + topology.street_width)  + topology.street_width/2
+                                
+            elif b >= 4:
+                x_min = topology.x[0] + (-3/2 + b - 4)*(topology.b_w + topology.street_width)  - topology.street_width/2
+                x_max = topology.x[0] + (-3/2 + b - 4)*(topology.b_w + topology.street_width)  + topology.street_width/2           
+                y_min = topology.y[0] - topology.cell_radius
+                y_max = topology.y[0] + topology.cell_radius
+                
+            if x_min<0:
+                x_min = 0
+            if y_min<0:
+                y_min =0
+            if x_max> 5 * topology.b_w + 4 * topology.street_width:
+                x_max = 5 * topology.b_w + 4 * topology.street_width
+            if y_max> 5 * topology.b_w + 4 * topology.street_width:
+                y_max = 5 * topology.b_w + 4 * topology.street_width
+                
+            x = (x_max - x_min)*random_number_gen.random_sample(num_v_per_grid) + x_min                
+            y = (y_max - y_min)*random_number_gen.random_sample(num_v_per_grid) + y_min
+            
+            v_x.extend(x)
+            v_y.extend(y)
+        
+        for bs in range(num_bs):
+            x2 = v_x + (topology.x[bs] - topology.x[0])
+            y2 = v_y + (topology.y[bs] - topology.y[0])
+            v_x2.extend(x2)
+            v_y2.extend(y2)
+            
+        v2i_v.x = np.array(v_x2)
+        v2i_v.y = np.array(v_y2)
+            
+           
+
+#            # theta is the horizontal angle of the UE wrt the serving BS
+#            theta = np.degrees(np.arctan2(y - topology.y[0], x - topology.x[0]))
+#            # calculate UE azimuth wrt serving BS
+#            imt_ue.azimuth[idx] = (azimuth[idx] + theta + 180)%360
+#
+#            # calculate elevation angle
+#            # psi is the vertical angle of the UE wrt the serving BS
+#            distance = np.sqrt((topology.x[bs] - x)**2 + (topology.y[bs] - y)**2)
+#            psi = np.degrees(np.arctan((param.bs_height - param.ue_height)/distance))
+#            imt_ue.elevation[idx] = elevation[idx] + psi
+#
+#            # check if UE is indoor
+#            if bs % 3 == 0:
+#                out = (x < topology.x[bs] - topology.cell_radius) | \
+#                      (y > topology.y[bs] + topology.b_d/2) | \
+#                      (y < topology.y[bs] - topology.b_d/2)
+#            if bs % 3 == 1:
+#                out = (y > topology.y[bs] + topology.b_d/2) | \
+#                      (y < topology.y[bs] - topology.b_d/2)
+#            if bs % 3 == 2:
+#                out = (x > topology.x[bs] + topology.cell_radius) | \
+#                      (y > topology.y[bs] + topology.b_d/2) | \
+#                      (y < topology.y[bs] - topology.b_d/2)
+#            imt_ue.indoor[idx] = ~ out
+#
+#        v2i_v.x = np.array(v_x)
+#        v2i_v.y = np.array(v_y)
+#
+#        v2i_v.active = np.zeros(num_v, dtype=bool)
+#        v2i_v.height = param.ue_height*np.ones(num_v)
+#        v2i_v.rx_interference = -500*np.ones(num_v)
+#        v2i_v.ext_interference = -500*np.ones(num_v)
+#
+#        # TODO: this piece of code works only for uplink
+#        par = param_ant.get_antenna_parameters("UE","TX")
+#        for i in range(num_ue):
+#            imt_ue.antenna[i] = AntennaBeamformingImt(par, imt_ue.azimuth[i],
+#                                                         imt_ue.elevation[i])
+#
+#        #imt_ue.antenna = [AntennaOmni(0) for bs in range(num_ue)]
+#        imt_ue.bandwidth = param.bandwidth*np.ones(num_ue)
+#        imt_ue.center_freq = param.frequency*np.ones(num_ue)
+#        imt_ue.noise_figure = param.ue_noise_figure*np.ones(num_ue)
+#
+#        if param.spectral_mask == "ITU 265-E":
+#            imt_ue.spectral_mask = SpectralMaskImt(StationType.IMT_UE,param.frequency,\
+#                                                   param.bandwidth,scenario = "INDOOR")
+#
+#        elif param.spectral_mask == "3GPP 36.104":
+#            imt_ue.spectral_mask = SpectralMask3Gpp(StationType.IMT_UE,param.frequency,\
+#                                                   param.bandwidth)
+#
+#        imt_ue.spectral_mask.set_mask()
+
+        return v2i_v
+    
+    
     @staticmethod
     def generate_system(parameters: Parameters, topology: Topology, random_number_gen: np.random.RandomState ):
         if parameters.general.system == "FSS_ES":
@@ -685,8 +817,15 @@ if __name__ == '__main__':
     # plot uniform distribution in macrocell scenario
 
     factory = StationFactory()
-    topology = TopologyMacrocell(1000, 1)
+    param = ParametersV2i()
+    param.n_rows = 5
+    param.n_colums = 4
+    param.street_width = 14
+    param.ue_indoor_percent = 0.95
+    param.building_class = "TRADITIONAL"
+    topology = TopologyV2i(param)
     topology.calculate_coordinates()
+    random_number_gen = np.random.RandomState()
 
     class ParamsAux(object):
         def __init__(self):
@@ -726,7 +865,7 @@ if __name__ == '__main__':
     ant_param.ue_tx_element_horiz_spacing = 0.5
     ant_param.ue_tx_element_vert_spacing = 0.5
 
-    imt_ue = factory.generate_imt_ue(params, ant_param, topology)
+    v2i_v = factory.generate_v2i_v(param, ant_param, random_number_gen, topology)
 
     fig = plt.figure(figsize=(8, 8), facecolor='w', edgecolor='k')  # create a figure object
     ax = fig.add_subplot(1, 1, 1)  # create an axes object in the figure
@@ -734,11 +873,11 @@ if __name__ == '__main__':
     topology.plot(ax)
 
     plt.axis('image')
-    plt.title("Macro cell topology")
+    plt.title("V2I topology")
     plt.xlabel("x-coordinate [m]")
     plt.ylabel("y-coordinate [m]")
 
-    plt.plot(imt_ue.x, imt_ue.y, "*")
+    plt.plot(v2i_v.x, v2i_v.y, "*")
 
     plt.tight_layout()
     plt.show()

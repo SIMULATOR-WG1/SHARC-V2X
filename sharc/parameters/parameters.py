@@ -11,6 +11,7 @@ from sharc.parameters.parameters_general import ParametersGeneral
 from sharc.parameters.parameters_imt import ParametersImt
 from sharc.parameters.parameters_hotspot import ParametersHotspot
 from sharc.parameters.parameters_indoor import ParametersIndoor
+from sharc.parameters.parameters_v2i import ParametersV2i
 from sharc.parameters.parameters_antenna_imt import ParametersAntennaImt
 from sharc.parameters.parameters_fs import ParametersFs
 from sharc.parameters.parameters_fss_ss import ParametersFssSs
@@ -33,6 +34,7 @@ class Parameters(object):
         self.antenna_imt = ParametersAntennaImt()
         self.hotspot = ParametersHotspot()
         self.indoor = ParametersIndoor()
+        self.v2i = ParametersV2i()
         self.fs = ParametersFs()
         self.fss_ss = ParametersFssSs()
         self.fss_es = ParametersFssEs()
@@ -174,6 +176,16 @@ class Parameters(object):
         self.indoor.street_width = config.getint("INDOOR", "street_width")
         self.indoor.ue_indoor_percent = config.getfloat("INDOOR", "ue_indoor_percent")
         self.indoor.building_class = config.get("INDOOR", "building_class")
+
+        #######################################################################
+        # V2I
+        #######################################################################
+        self.v2i.basic_path_loss = config.get("V2I", "basic_path_loss")
+        self.v2i.n_rows = config.getint("V2I", "n_rows")
+        self.v2i.n_colums = config.getint("V2I", "n_colums")
+        self.v2i.street_width = config.getint("V2I", "street_width")
+        self.v2i.ue_indoor_percent = config.getfloat("V2I", "ue_indoor_percent")
+        self.v2i.building_class = config.get("V2I", "building_class")
 
         #######################################################################
         # FSS space station

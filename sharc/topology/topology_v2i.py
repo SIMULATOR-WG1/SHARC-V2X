@@ -25,7 +25,7 @@ class TopologyV2i(Topology):
         
         Parameters
         ----------
-            param : parameters of the indoor topology
+            param : parameters of the V2I topology
         """
 
         # These are the building's width, deep and height
@@ -107,7 +107,7 @@ class TopologyV2i(Topology):
 if __name__ == '__main__':
     param = ParametersV2i()
     param.intersite_distance = 680
-    param.n_rows = 1
+    param.n_rows = 1        
     param.n_colums = 1
     param.street_width = 14
     param.ue_indoor_percent = 0.95
