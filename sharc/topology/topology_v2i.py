@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Dec  5 15:45:26 2017
+Created on Tue Jul  4 15:45:26 2017
 
-@author: edgar
+@author: carlos
 """
 
 from sharc.topology.topology import Topology
@@ -36,7 +36,7 @@ class TopologyV2i(Topology):
         self.b_h = 3
 
         # This value is hard coded because initially this is the only supported
-        # value. The value of 680 divided by 1.7 give cell radius of 400 mts of an RSU
+        # value. The value of 680 divided by 1.7 gives cell radius of 400 mts of an RSU
         intersite_distance = 680
         
         #Considering hexagonal topology, D/sqrt(3) = Cell radius
@@ -46,10 +46,7 @@ class TopologyV2i(Topology):
         
         self.n_rows = param.n_rows
         self.n_colums = param.n_colums
-        self.street_width = param.street_width
-        self.ue_indoor_percent = param.ue_indoor_percent
-        self.building_class = param.building_class
-        
+        self.street_width = param.street_width        
         
         
     def calculate_coordinates(self, random_number_gen=np.random.RandomState()):
@@ -110,8 +107,6 @@ if __name__ == '__main__':
     param.n_rows = 1        
     param.n_colums = 1
     param.street_width = 14
-    param.ue_indoor_percent = 0.95
-    param.building_class = "TRADITIONAL"
     topology = TopologyV2i(param)
     topology.calculate_coordinates()
     
