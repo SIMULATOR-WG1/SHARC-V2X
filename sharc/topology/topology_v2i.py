@@ -2,7 +2,8 @@
 """
 Created on Tue Jul  4 15:45:26 2017
 
-@author: carlos
+@author: edgar
+Modified for V2X project on Jul 10 by Carlos Rodriguez
 """
 
 from sharc.topology.topology import Topology
@@ -56,8 +57,8 @@ class TopologyV2i(Topology):
         be called only once for the indoor topology. So we set 
         static_base_stations to True to avoid unnecessary calculations.
         """
-        if not self.static_base_stations:
-            self.static_base_stations = True
+        if not self.static_rsu:
+            self.static_rsu = True
                        
             x_base = np.array([ 0 ])
             y_base = np.array([ 0 ])
@@ -77,11 +78,11 @@ class TopologyV2i(Topology):
                     self.y = np.concatenate((self.y, y_bs + c*5*(self.b_d + self.street_width)))
             
         # In the end, we have to update the number of base stations
-        self.num_base_stations = self.n_rows * self.n_colums        
+        self.num_rsu = self.n_rows * self.n_colums        
 
-        self.azimuth = np.zeros(self.num_base_stations)
-        self.elevation = -90*np.ones(self.num_base_stations)
-        self.indoor = np.ones(self.num_base_stations, dtype = bool)
+        self.azimuth = np.zeros(self.num_rsu)
+        self.elevation = -90*np.ones(self.num_rsu)
+        self.indoor = np.ones(self.num_rsu, dtype = bool)
                 
             
     def plot(self, ax: matplotlib.axes.Axes):

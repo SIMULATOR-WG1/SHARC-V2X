@@ -3,6 +3,8 @@
 Created on Wed Jan 11 19:04:03 2017
 
 @author: edgar
+
+Modified for V2X project on Jul 10 by Carlos Rodriguez
 """
 
 from abc import ABC, abstractmethod
@@ -49,54 +51,54 @@ class Simulation(ABC, Observable):
 
         self.topology = TopologyFactory.createTopology(self.parameters)
 
-        self.bs_power_gain = 0
-        self.ue_power_gain = 0
+        self.rsu_power_gain = 0
+        self.v_power_gain = 0
 
-        self.imt_bs_antenna_gain = list()
-        self.imt_ue_antenna_gain = list()
-        self.system_imt_antenna_gain = list()
-        self.imt_system_antenna_gain = list()
+        self.v2x_rsu_antenna_gain = list()
+        self.v2x_v_antenna_gain = list()
+        self.system_v2x_antenna_gain = list()
+        self.v2x_system_antenna_gain = list()
 
-        self.path_loss_imt = np.empty(0)
-        self.coupling_loss_imt = np.empty(0)
-        self.coupling_loss_imt_system = np.empty(0)
-        self.coupling_loss_imt_system_adjacent = np.empty(0)
+        self.path_loss_v2x = np.empty(0)
+        self.coupling_loss_v2x = np.empty(0)
+        self.coupling_loss_v2x_system = np.empty(0)
+        self.coupling_loss_v2x_system_adjacent = np.empty(0)
 
-        self.bs_to_ue_phi = np.empty(0)
-        self.bs_to_ue_theta = np.empty(0)
-        self.bs_to_ue_beam_rbs = np.empty(0)
+        self.rsu_to_v_phi = np.empty(0)
+        self.rsu_to_v_theta = np.empty(0)
+        self.rsu_to_v_beam_rbs = np.empty(0)
 
-        self.ue = np.empty(0)
-        self.bs = np.empty(0)
+        self.v = np.empty(0)
+        self.rsu = np.empty(0)
         self.system = np.empty(0)
 
         self.link = dict()
 
-        self.num_rb_per_bs = 0
-        self.num_rb_per_ue = 0
+        self.num_rb_per_rsu = 0
+        self.num_rb_per_v = 0
 
         self.results = None
 
-        imt_min_freq = self.parameters.imt.frequency - self.parameters.imt.bandwidth / 2
-        imt_max_freq = self.parameters.imt.frequency + self.parameters.imt.bandwidth / 2
+        v2x_min_freq = self.parameters.v2x.frequency - self.parameters.v2x.bandwidth / 2
+        v2x_max_freq = self.parameters.v2x.frequency + self.parameters.v2x.bandwidth / 2
         system_min_freq = self.param_system.frequency - self.param_system.bandwidth / 2
         system_max_freq = self.param_system.frequency + self.param_system.bandwidth / 2
 
-        max_min_freq = np.maximum(imt_min_freq, system_min_freq)
-        min_max_freq = np.minimum(imt_max_freq, system_max_freq)
+        max_min_freq = np.maximum(v2x_min_freq, system_min_freq)
+        min_max_freq = np.minimum(v2x_max_freq, system_max_freq)
 
         self.overlapping_bandwidth = min_max_freq - max_min_freq
         if self.overlapping_bandwidth < 0:
             self.overlapping_bandwidth = 0
 
         if (self.overlapping_bandwidth == self.param_system.bandwidth and
-            not self.parameters.imt.interfered_with) or \
-           (self.overlapping_bandwidth == self.parameters.imt.bandwidth and
-            self.parameters.imt.interfered_with):
+            not self.parameters.v2x.interfered_with) or \
+           (self.overlapping_bandwidth == self.parameters.v2x.bandwidth and
+            self.parameters.v2x.interfered_with):
 
             self.adjacent_channel = False
 
-        self.propagation_imt = None
+        self.propagation_v2x = None
         self.propagation_system = None
 
     def add_observer_list(self, observers: list):
@@ -109,37 +111,37 @@ class Simulation(ABC, Observable):
         """
 
         self.topology.calculate_coordinates()
-        num_bs = self.topology.num_base_stations
-        num_ue = num_bs*self.parameters.imt.ue_k*self.parameters.imt.ue_k_m
+        num_rsu = self.topology.n_rows*self.topology.n_colums
+        num_v = num_rsu*37*8
 
-        self.bs_power_gain = 10*math.log10(self.parameters.antenna_imt.bs_tx_n_rows*
-                                           self.parameters.antenna_imt.bs_tx_n_columns)
-        self.ue_power_gain = 10*math.log10(self.parameters.antenna_imt.ue_tx_n_rows*
-                                           self.parameters.antenna_imt.ue_tx_n_columns)
-        self.imt_bs_antenna_gain = list()
-        self.imt_ue_antenna_gain = list()
-        self.path_loss_imt = np.empty([num_bs, num_ue])
-        self.coupling_loss_imt = np.empty([num_bs, num_ue])
-        self.coupling_loss_imt_system = np.empty(num_ue)
+        self.rsu_power_gain = 10*math.log10(self.parameters.antenna_v2x.rsu_tx_n_rows*
+                                           self.parameters.antenna_v2x.rsu_tx_n_columns)
+        self.v_power_gain = 10*math.log10(self.parameters.antenna_v2x.v_tx_n_rows*
+                                           self.parameters.antenna_v2x.v_tx_n_columns)
+        self.v2x_rsu_antenna_gain = list()
+        self.v2x_v_antenna_gain = list()
+        self.path_loss_v2x = np.empty([num_rsu, num_v])
+        self.coupling_loss_v2x = np.empty([num_rsu, num_v])
+        self.coupling_loss_v2x_system = np.empty(num_v)
 
-        self.bs_to_ue_phi = np.empty([num_bs, num_ue])
-        self.bs_to_ue_theta = np.empty([num_bs, num_ue])
-        self.bs_to_ue_beam_rbs = -1.0*np.ones(num_ue, dtype=int)
+        self.rsu_to_v_phi = np.empty([num_rsu, num_v])
+        self.rsu_to_v_theta = np.empty([num_rsu, num_v])
+        self.rsu_to_v_beam_rbs = -1.0*np.ones(num_v, dtype=int)
 
-        self.ue = np.empty(num_ue)
-        self.bs = np.empty(num_bs)
+        self.v = np.empty(num_v)
+        self.rsu = np.empty(num_rsu)
         self.system = np.empty(1)
 
-        # this attribute indicates the list of UE's that are connected to each
-        # base station. The position the the list indicates the resource block
-        # group that is allocated to the given UE
-        self.link = dict([(bs,list()) for bs in range(num_bs)])
+        # this attribute indicates the list of veicles that are connected to each
+        # rsu. The position the the list indicates the resource block
+        # group that is allocated to the given veicle
+        self.link = dict([(rsu,list()) for rsu in range(num_rsu)])
 
-        # calculates the number of RB per BS
-        self.num_rb_per_bs = math.trunc((1-self.parameters.imt.guard_band_ratio)* \
-                            self.parameters.imt.bandwidth /self.parameters.imt.rb_bandwidth)
-        # calculates the number of RB per UE on a given BS
-        self.num_rb_per_ue = math.trunc(self.num_rb_per_bs/self.parameters.imt.ue_k)
+        # calculates the number of RB per RSU
+        self.num_rb_per_rsu = math.trunc((1-self.parameters.v2x.guard_band_ratio)* \
+                            self.parameters.v2x.bandwidth /self.parameters.v2x.rb_bandwidth)
+        # calculates the number of RB per Veicle on a given RSU
+        self.num_rb_per_v = math.trunc(self.num_rb_per_rsu/num_v)
 
         self.results = Results(self.parameters_filename, self.parameters.general.overwrite_output)
 
@@ -165,18 +167,18 @@ class Simulation(ABC, Observable):
         d_2D = station_a.get_distance_to(station_b)
         d_3D = station_a.get_3d_distance_to(station_b)
 
-        if self.parameters.imt.interfered_with:
+        if self.parameters.v2x.interfered_with:
             freq = self.param_system.frequency
         else:
-            freq = self.parameters.imt.frequency
+            freq = self.parameters.v2x.frequency
 
         if station_a.station_type is StationType.FSS_SS or \
            station_a.station_type is StationType.HAPS or \
            station_a.station_type is StationType.RNS:
             elevation_angles = station_b.get_elevation_angle(station_a, self.param_system)
-        elif station_a.station_type is StationType.IMT_BS and \
-             station_b.station_type is StationType.IMT_UE and \
-             self.parameters.imt.topology == "INDOOR":
+        elif station_a.station_type is StationType.V2X_I and \
+             station_b.station_type is StationType.V2X_V and \
+             self.parameters.v2x.topology == "V2I":
             elevation_angles = np.transpose(station_b.get_elevation(station_a))
         else:
             elevation_angles = None
@@ -188,19 +190,19 @@ class Simulation(ABC, Observable):
            station_a.station_type is StationType.RNS or \
            station_a.station_type is StationType.RAS:
 
-            if station_b.station_type is StationType.IMT_UE:
+            if station_b.station_type is StationType.V2X_V:
                 # define antenna gains
                 gain_a = self.calculate_gains(station_a, station_b)
                 gain_b = np.transpose(self.calculate_gains(station_b, station_a, c_channel))
-                sectors_in_node=1
+                sectors_in_node=37*8
 
             else:
                 # define antenna gains
-                gain_a = np.repeat(self.calculate_gains(station_a, station_b), self.parameters.imt.ue_k, 1)
+                gain_a = np.repeat(self.calculate_gains(station_a, station_b), 37*8, 1)
                 gain_b = np.transpose(self.calculate_gains(station_b, station_a, c_channel))
-                sectors_in_node = self.parameters.imt.ue_k
+                sectors_in_node = 37*8
 
-            if self.parameters.imt.interfered_with:
+            if self.parameters.v2x.interfered_with:
                 earth_to_space = False
                 single_entry = True
             else:
@@ -223,82 +225,80 @@ class Simulation(ABC, Observable):
                                              elevation=elevation_angles, es_params=self.param_system,
                                              tx_gain = gain_a, rx_gain = gain_b, number_of_sectors=sectors_in_node)
 
-            self.system_imt_antenna_gain = gain_a
-            self.imt_system_antenna_gain = gain_b
+            self.system_v2x_antenna_gain = gain_a
+            self.v2x_system_antenna_gain = gain_b
         else:
             path_loss = propagation.get_loss(distance_3D=d_3D,
                                              distance_2D=d_2D,
-                                             frequency=self.parameters.imt.frequency*np.ones(d_2D.shape),
+                                             frequency=self.parameters.v2x.frequency*np.ones(d_2D.shape),
                                              indoor_stations=np.tile(station_b.indoor, (station_a.num_stations, 1)),
-                                             bs_height=station_a.height,
-                                             ue_height=station_b.height,
+                                             rsu_height=station_a.height,
+                                             v_height=station_b.height,
                                              elevation=elevation_angles,
-                                             shadowing=self.parameters.imt.shadowing,
-                                             line_of_sight_prob=self.parameters.imt.line_of_sight_prob)
+                                             shadowing=self.parameters.v2x.shadowing,
+                                             line_of_sight_prob=self.parameters.v2x.line_of_sight_prob)
             # define antenna gains
             gain_a = self.calculate_gains(station_a, station_b)
             gain_b = np.transpose(self.calculate_gains(station_b, station_a))
 
-            # collect IMT BS and UE antenna gain samples
-            self.path_loss_imt = path_loss
-            self.imt_bs_antenna_gain = gain_a
-            self.imt_ue_antenna_gain = gain_b
+            # collect V2X RSU and V antenna gain samples
+            self.path_loss_v2x = path_loss
+            self.v2x_rsu_antenna_gain = gain_a
+            self.v2x_v_antenna_gain = gain_b
 
         # calculate coupling loss
         coupling_loss = np.squeeze(path_loss - gain_a - gain_b)
 
         return coupling_loss
 
-    def connect_ue_to_bs(self):
+    def connect_v_to_rsu(self):
         """
-        Link the UE's to the serving BS. It is assumed that each group of K*M
-        user equipments are distributed and pointed to a certain base station
-        according to the decisions taken at TG 5/1 meeting
+        Link the Veicles to the serving RSU. 
         """
-        num_ue_per_bs = self.parameters.imt.ue_k*self.parameters.imt.ue_k_m
-        bs_active = np.where(self.bs.active)[0]
-        for bs in bs_active:
-            ue_list = [i for i in range(bs*num_ue_per_bs, bs*num_ue_per_bs + num_ue_per_bs)]
-            self.link[bs] = ue_list
+        num_v_per_rsu = 37*8
+        rsu_active = np.where(self.rsu.active)[0]
+        for rsu in rsu_active:
+            v_list = [i for i in range(rsu*num_v_per_rsu, rsu*num_v_per_rsu + num_v_per_rsu)]
+            self.link[rsu] = v_list
 
-    def select_ue(self, random_number_gen: np.random.RandomState):
+    def select_v(self, random_number_gen: np.random.RandomState):
         """
-        Select K UEs randomly from all the UEs linked to one BS as “chosen”
-        UEs. These K “chosen” UEs will be scheduled during this snapshot.
+        Select K Veicles randomly from all the Veicles linked to one RSU as “chosen”
+        Veicles. These K “chosen” Veicles will be scheduled during this snapshot.
         """
-        self.bs_to_ue_phi, self.bs_to_ue_theta = \
-            self.bs.get_pointing_vector_to(self.ue)
+        self.rsu_to_v_phi, self.rsu_to_v_theta = \
+            self.rsu.get_pointing_vector_to(self.v)
 
-        bs_active = np.where(self.bs.active)[0]
-        for bs in bs_active:
-            # select K UE's among the ones that are connected to BS
-            random_number_gen.shuffle(self.link[bs])
-            K = self.parameters.imt.ue_k
-            del self.link[bs][K:]
-            # Activate the selected UE's and create beams
-            if self.bs.active[bs]:
-                self.ue.active[self.link[bs]] = np.ones(K, dtype=bool)
-                for ue in self.link[bs]:
-                    # add beam to BS antennas
-                    self.bs.antenna[bs].add_beam(self.bs_to_ue_phi[bs,ue],
-                                             self.bs_to_ue_theta[bs,ue])
-                    # add beam to UE antennas
-                    self.ue.antenna[ue].add_beam(self.bs_to_ue_phi[bs,ue] - 180,
-                                             180 - self.bs_to_ue_theta[bs,ue])
+        rsu_active = np.where(self.rsu.active)[0]
+        for rsu in rsu_active:
+            # select K Veicles among the ones that are connected to RSU
+            random_number_gen.shuffle(self.link[rsu])
+            K = 37*8
+            del self.link[rsu][K:]
+            # Activate the selected Veicles and create beams
+            if self.rsu.active[rsu]:
+                self.v.active[self.link[rsu]] = np.ones(K, dtype=bool)
+                for v in self.link[rsu]:
+                    # add beam to RSU antennas
+                    self.rsu.antenna[rsu].add_beam(self.rsu_to_v_phi[rsu,v],
+                                             self.rsu_to_v_theta[rsu,v])
+                    # add beam to Veicles "V" antennas
+                    self.v.antenna[v].add_beam(self.rsu_to_v_phi[rsu,v] - 180,
+                                             180 - self.rsu_to_v_theta[rsu,v])
                     # set beam resource block group
-                    self.bs_to_ue_beam_rbs[ue] = len(self.bs.antenna[bs].beams_list) - 1
+                    self.rsu_to_v_beam_rbs[v] = len(self.rsu.antenna[rsu].beams_list) - 1
 
 
     def scheduler(self):
         """
-        This scheduler divides the available resource blocks among UE's for
-        a given BS
+        This scheduler divides the available resource blocks among Veicles for
+        a given RSU
         """
-        bs_active = np.where(self.bs.active)[0]
-        for bs in bs_active:
-            ue = self.link[bs]
-            self.bs.bandwidth[bs] = self.num_rb_per_ue*self.parameters.imt.rb_bandwidth
-            self.ue.bandwidth[ue] = self.num_rb_per_ue*self.parameters.imt.rb_bandwidth
+        rsu_active = np.where(self.rsu.active)[0]
+        for rsu in rsu_active:
+            v = self.link[rsu]
+            self.rsu.bandwidth[rsu] = self.num_rb_per_v*self.parameters.v2x.rb_bandwidth
+            self.v.bandwidth[v] = self.num_rb_per_v*self.parameters.v2x.rb_bandwidth
 
     def calculate_gains(self,
                         station_1: StationManager,
@@ -314,20 +314,20 @@ class Simulation(ABC, Observable):
         station_2_active = np.where(station_2.active)[0]
 
         # Initialize variables (phi, theta, beams_idx)
-        if(station_1.station_type is StationType.IMT_BS):
-            if(station_2.station_type is StationType.IMT_UE):
-                beams_idx = self.bs_to_ue_beam_rbs[station_2_active]
+        if(station_1.station_type is StationType.V2X_I):
+            if(station_2.station_type is StationType.V2X_V):
+                beams_idx = self.rsu_to_v_beam_rbs[station_2_active]
             elif(station_2.station_type is StationType.FSS_SS or \
                  station_2.station_type is StationType.FSS_ES or \
                  station_2.station_type is StationType.HAPS or \
                  station_2.station_type is StationType.FS or \
                  station_2.station_type is StationType.RNS or \
                  station_2.station_type is StationType.RAS):
-                phi = np.repeat(phi,self.parameters.imt.ue_k,0)
-                theta = np.repeat(theta,self.parameters.imt.ue_k,0)
-                beams_idx = np.tile(np.arange(self.parameters.imt.ue_k),self.bs.num_stations)
+                phi = np.repeat(phi,37*8,0)
+                theta = np.repeat(theta,37*8,0)
+                beams_idx = np.tile(np.arange(37*8),self.rsu.num_stations)
 
-        elif(station_1.station_type is StationType.IMT_UE):
+        elif(station_1.station_type is StationType.V2X_V):
             beams_idx = np.zeros(len(station_2_active),dtype=int)
 
         elif(station_1.station_type is StationType.FSS_SS or \
@@ -340,25 +340,25 @@ class Simulation(ABC, Observable):
 
         # Calculate gains
         gains = np.zeros(phi.shape)
-        if (station_1.station_type is StationType.IMT_BS and station_2.station_type is StationType.FSS_SS) or \
-           (station_1.station_type is StationType.IMT_BS and station_2.station_type is StationType.FSS_ES) or \
-           (station_1.station_type is StationType.IMT_BS and station_2.station_type is StationType.HAPS) or \
-           (station_1.station_type is StationType.IMT_BS and station_2.station_type is StationType.FS) or \
-           (station_1.station_type is StationType.IMT_BS and station_2.station_type is StationType.RNS) or \
-           (station_1.station_type is StationType.IMT_BS and station_2.station_type is StationType.RAS):
+        if (station_1.station_type is StationType.V2X_I and station_2.station_type is StationType.FSS_SS) or \
+           (station_1.station_type is StationType.V2X_I and station_2.station_type is StationType.FSS_ES) or \
+           (station_1.station_type is StationType.V2X_I and station_2.station_type is StationType.HAPS) or \
+           (station_1.station_type is StationType.V2X_I and station_2.station_type is StationType.FS) or \
+           (station_1.station_type is StationType.V2X_I and station_2.station_type is StationType.RNS) or \
+           (station_1.station_type is StationType.V2X_I and station_2.station_type is StationType.RAS):
             for k in station_1_active:
-                for b in range(k*self.parameters.imt.ue_k,(k+1)*self.parameters.imt.ue_k):
+                for b in range(k*37*8,(k+1)*37*8):
                     gains[b,station_2_active] = station_1.antenna[k].calculate_gain(phi_vec=phi[b,station_2_active],
                                                                             theta_vec=theta[b,station_2_active],
                                                                             beams_l=np.array([beams_idx[b]]),
                                                                             co_channel=c_channel)
 
-        elif (station_1.station_type is StationType.IMT_UE and station_2.station_type is StationType.FSS_SS) or \
-             (station_1.station_type is StationType.IMT_UE and station_2.station_type is StationType.FSS_ES) or \
-             (station_1.station_type is StationType.IMT_UE and station_2.station_type is StationType.HAPS) or \
-             (station_1.station_type is StationType.IMT_UE and station_2.station_type is StationType.FS) or \
-             (station_1.station_type is StationType.IMT_UE and station_2.station_type is StationType.RNS) or \
-             (station_1.station_type is StationType.IMT_UE and station_2.station_type is StationType.RAS):
+        elif (station_1.station_type is StationType.V2X_V and station_2.station_type is StationType.FSS_SS) or \
+             (station_1.station_type is StationType.V2X_V and station_2.station_type is StationType.FSS_ES) or \
+             (station_1.station_type is StationType.V2X_V and station_2.station_type is StationType.HAPS) or \
+             (station_1.station_type is StationType.V2X_V and station_2.station_type is StationType.FS) or \
+             (station_1.station_type is StationType.V2X_V and station_2.station_type is StationType.RNS) or \
+             (station_1.station_type is StationType.V2X_V and station_2.station_type is StationType.RAS):
                for k in station_1_active:
                    gains[k,station_2_active] = station_1.antenna[k].calculate_gain(phi_vec=phi[k,station_2_active],
                                                                             theta_vec=theta[k,station_2_active],
@@ -380,7 +380,7 @@ class Simulation(ABC, Observable):
             theta = np.degrees(np.arctan((station_1.height - station_2.height)/distance)) + station_1.elevation
             gains[0,station_2_active] = station_1.antenna[0].calculate_gain(off_axis_angle_vec=off_axis_angle[0,station_2_active],
                                                                             theta_vec=theta[0,station_2_active])
-        else: # for IMT <-> IMT
+        else: # for V2V <-> V2V
             for k in station_1_active:
                 gains[k,station_2_active] = station_1.antenna[k].calculate_gain(phi_vec=phi[k,station_2_active],
                                                                             theta_vec=theta[k,station_2_active],
@@ -388,7 +388,7 @@ class Simulation(ABC, Observable):
 
         return gains
 
-    def calculate_imt_tput(self,
+    def calculate_v2x_tput(self,
                            sinr: np.array,
                            sinr_min: float,
                            sinr_max: float,
@@ -408,17 +408,17 @@ class Simulation(ABC, Observable):
 
         return tput
 
-    def calculate_bw_weights(self, bw_imt: float, bw_sys: float, ue_k: int) -> np.array:
+    def calculate_bw_weights(self, bw_v2x: float, bw_sys: float, ue_k: int) -> np.array:
         """
-        Calculates the weight that each resource block group of IMT base stations
+        Calculates the weight that each resource block group of V2X base stations
         will have when estimating the interference to other systems based on
         the bandwidths of both systems.
 
         Parameters
         ----------
-            bw_imt : bandwidth of IMT system
+            bw_v2x : bandwidth of V2X system
             bw_sys : bandwidth of other system
-            ue_k : number of UE's allocated to each IMT base station; it also
+            ue_k : number of UE's allocated to each V2X base station; it also
                 corresponds to the number of resource block groups
 
         Returns
@@ -426,13 +426,13 @@ class Simulation(ABC, Observable):
             K-dimentional array of weights
         """
 
-        if bw_imt <= bw_sys:
+        if bw_v2x <= bw_sys:
             weights = np.ones(ue_k)
 
-        elif bw_imt > bw_sys:
+        elif bw_v2x > bw_sys:
             weights = np.zeros(ue_k)
 
-            bw_per_rbg = bw_imt / ue_k
+            bw_per_rbg = bw_v2x / (37*8)
 
             # number of resource block groups that will have weight equal to 1
             rb_ones = math.floor( bw_sys / bw_per_rbg )

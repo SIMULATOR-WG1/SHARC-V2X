@@ -3,6 +3,7 @@
 Created on Tue Feb 14 12:48:58 2017
 
 @author: edgar
+Modified for V2X project on Jul 10 by Carlos Rodriguez
 """
 
 from abc import ABCMeta, abstractmethod
@@ -26,8 +27,8 @@ class Topology(object):
         self.azimuth = np.empty(0)
         self.elevation = np.empty(0)
         self.indoor = np.empty(0)
-        self.num_base_stations = -1
-        self.static_base_stations = False
+        self.num_rsu = -1
+        self.static_rsu = False
         self.x_block = np.empty(0)
         self.y_block = np.empty(0)
 

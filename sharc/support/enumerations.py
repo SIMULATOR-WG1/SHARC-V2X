@@ -39,3 +39,4 @@ class StationType(Enum):
     RNS    = 7  # Radionavigation service
     RAS    = 8  # Radio Astronomy Service
     V2X_V  = 9  # Veicle to Infrastructure/Veicle - Veicle
+    V2X_I  = 10 # Veicle to Infrastructure/Veicle - Veicle

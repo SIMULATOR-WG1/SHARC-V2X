@@ -3,6 +3,7 @@
 Created on Sat Apr 15 15:35:51 2017
 
 @author: Calil
+Modified for V2X project on Jul 10 by Carlos Rodriguez
 """
 
 import numpy as np
@@ -15,7 +16,7 @@ from sharc.antenna.antenna_element_imt_f1336 import AntennaElementImtF1336
 from sharc.antenna.antenna_element_imt_const import AntennaElementImtConst
 from sharc.antenna.antenna import Antenna
 from sharc.support.named_tuples import AntennaPar
-from sharc.parameters.parameters_antenna_imt import ParametersAntennaImt
+from sharc.parameters.parameters_antenna_v2x import ParametersAntennaV2x
 
 
 class AntennaBeamformingImt(Antenna):
@@ -76,17 +77,6 @@ class AntennaBeamformingImt(Antenna):
         self.dh = par.element_horiz_spacing
         self.dv = par.element_vert_spacing
         
-        # Beamforming normalization
-        self.normalize = par.normalization
-        self.co_correction_factor_list = []
-        self.adj_correction_factor = 0.0
-        if self.normalize:
-            # Load co-channel data
-            self.norm_data = par.normalization_data
-            self.adj_correction_factor = self.norm_data["correction_factor_adj_channel"]
-            self.co_correction_factor = self.norm_data["correction_factor_co_channel"]
-            self.resolution = self.norm_data["resolution"]
-
     def add_beam(self, phi_etilt: float, theta_etilt: float):
         """
         Add new beam to antenna.
@@ -102,12 +92,12 @@ class AntennaBeamformingImt(Antenna):
         self.beams_list.append((phi, theta-90))
         self.w_vec_list.append(self._weight_vector(phi, theta-90))
         
-        if self.normalize:
-            lin = int(phi/self.resolution)
-            col = int(theta/self.resolution)
-            self.co_correction_factor_list.append(self.co_correction_factor[lin,col])
-        else:
-            self.co_correction_factor_list.append(0.0)
+#        if self.normalize:
+#            lin = int(phi/self.resolution)
+#            col = int(theta/self.resolution)
+#            self.co_correction_factor_list.append(self.co_correction_factor[lin,col])
+#        else:
+#        self.co_correction_factor_list.append(0.0)
 
     def calculate_gain(self, *args, **kwargs) -> np.array:
         """
@@ -136,20 +126,20 @@ class AntennaBeamformingImt(Antenna):
         else: co_channel = True
         if("beams_l" in kwargs.keys()): 
             beams_l = np.asarray(kwargs["beams_l"],dtype=int)
-            correction_factor = self.co_correction_factor_list
-            correction_factor_idx = beams_l
+#            correction_factor = self.co_correction_factor_list
+#            correction_factor_idx = beams_l
         else: 
             beams_l = -1*np.ones_like(phi_vec)
-            if co_channel:
-                if self.normalize:
-                    lin_f = phi_vec/self.resolution
-                    col_f = theta_vec/self.resolution
-                    lin = lin_f.astype(int)
-                    col = col_f.astype(int)
-                    correction_factor = self.co_correction_factor[lin,col]
-                else:
-                    correction_factor = np.zeros_like(phi_vec)
-                correction_factor_idx = [i for i in range(len(correction_factor))]
+#            if co_channel:
+##                if self.normalize:
+##                    lin_f = phi_vec/self.resolution
+##                    col_f = theta_vec/self.resolution
+##                    lin = lin_f.astype(int)
+##                    col = col_f.astype(int)
+##                    correction_factor = self.co_correction_factor[lin,col]
+#                else:
+#                    correction_factor = np.zeros_like(phi_vec)
+#                correction_factor_idx = [i for i in range(len(correction_factor))]
 
         lo_phi_vec, lo_theta_vec = self.to_local_coord(phi_vec, theta_vec)
 
@@ -161,19 +151,19 @@ class AntennaBeamformingImt(Antenna):
             for g in range(n_direct):
                 gains[g] = self._beam_gain(lo_phi_vec[g], lo_theta_vec[g],
                                            beams_l[g])\
-                     + correction_factor[correction_factor_idx[g]]
+#                     + correction_factor[correction_factor_idx[g]]
         else:
             for g in range(n_direct):
                 gains[g] = self.element.element_pattern(lo_phi_vec[g],
                                                         lo_theta_vec[g])\
-                     + self.adj_correction_factor
+#                     + self.adj_correction_factor
 
         return gains
 
     def reset_beams(self):
         self.beams_list = []
         self.w_vec_list = []
-        self.co_correction_factor_list = []
+#        self.co_correction_factor_list = []
 
     def _super_position_vector(self,phi: float, theta: float) -> np.array:
         """

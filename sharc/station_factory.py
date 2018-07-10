@@ -3,6 +3,7 @@
 Created on Thu Mar 23 16:37:32 2017
 
 @author: edgar
+Modified for V2X project on Jul 10 by Carlos Rodriguez
     """
 
 import numpy as np
@@ -12,9 +13,9 @@ import matplotlib.pyplot as plt
 
 from sharc.support.enumerations import StationType
 from sharc.parameters.parameters import Parameters
-from sharc.parameters.parameters_imt import ParametersImt
+from sharc.parameters.parameters_v2x import ParametersV2x
 from sharc.parameters.parameters_v2i import ParametersV2i
-from sharc.parameters.parameters_antenna_imt import ParametersAntennaImt
+from sharc.parameters.parameters_antenna_v2x import ParametersAntennaV2x
 from sharc.parameters.parameters_fs import ParametersFs
 from sharc.parameters.parameters_fss_ss import ParametersFssSs
 from sharc.parameters.parameters_fss_es import ParametersFssEs
@@ -46,313 +47,316 @@ from sharc.spectral_mask_3gpp import SpectralMask3Gpp
 class StationFactory(object):
 
     @staticmethod
-    def generate_imt_base_stations(param: ParametersImt,
-                                   param_ant: ParametersAntennaImt,
+    def generate_v2x_base_stations(param: ParametersV2x,
+                                   param_ant: ParametersAntennaV2x,
                                    topology: Topology,
                                    random_number_gen: np.random.RandomState):
-        num_bs = topology.num_base_stations
-        imt_base_stations = StationManager(num_bs)
-        imt_base_stations.station_type = StationType.IMT_BS
+        num_rsu = topology.num_rsu
+        v2x_rsu = StationManager(num_rsu)
+        v2x_rsu.station_type = StationType.V2X_I
         # now we set the coordinates
-        imt_base_stations.x = topology.x
-        imt_base_stations.y = topology.y
-        imt_base_stations.azimuth = topology.azimuth
-        imt_base_stations.elevation = topology.elevation
-        imt_base_stations.height = param.bs_height*np.ones(num_bs)
+        v2x_rsu.x = topology.x
+        v2x_rsu.y = topology.y
+        v2x_rsu.azimuth = topology.azimuth
+        v2x_rsu.elevation = topology.elevation
+        v2x_rsu.height = param.rsu_height*np.ones(num_rsu)
 
-        imt_base_stations.active = random_number_gen.rand(num_bs) < param.bs_load_probability
-        imt_base_stations.tx_power = param.bs_conducted_power*np.ones(num_bs)
-        imt_base_stations.rx_power = dict([(bs, -500 * np.ones(param.ue_k)) for bs in range(num_bs)])
-        imt_base_stations.rx_interference = dict([(bs, -500 * np.ones(param.ue_k)) for bs in range(num_bs)])
-        imt_base_stations.ext_interference = dict([(bs, -500 * np.ones(param.ue_k)) for bs in range(num_bs)])
-        imt_base_stations.total_interference = dict([(bs, -500 * np.ones(param.ue_k)) for bs in range(num_bs)])
+        v2x_rsu.active = random_number_gen.rand(num_rsu) < param.rsu_load_probability
+        v2x_rsu.tx_power = param.rsu_conducted_power*np.ones(num_rsu)
+        v2x_rsu.rx_power = dict([(rsu, -500 * np.ones(37*8)) for rsu in range(num_rsu)])
+        v2x_rsu.rx_interference = dict([(rsu, -500 * np.ones(37*8)) for rsu in range(num_rsu)])
+        v2x_rsu.ext_interference = dict([(rsu, -500 * np.ones(37*8)) for rsu in range(num_rsu)])
+        v2x_rsu.total_interference = dict([(rsu, -500 * np.ones(37*8)) for rsu in range(num_rsu)])
 
-        imt_base_stations.snr = dict([(bs, -500 * np.ones(param.ue_k)) for bs in range(num_bs)])
-        imt_base_stations.sinr = dict([(bs, -500 * np.ones(param.ue_k)) for bs in range(num_bs)])
-        imt_base_stations.sinr_ext = dict([(bs, -500 * np.ones(param.ue_k)) for bs in range(num_bs)])
-        imt_base_stations.inr = dict([(bs, -500 * np.ones(param.ue_k)) for bs in range(num_bs)])
+        v2x_rsu.snr = dict([(rsu, -500 * np.ones(37*8)) for rsu in range(num_rsu)])
+        v2x_rsu.sinr = dict([(rsu, -500 * np.ones(37*8)) for rsu in range(num_rsu)])
+        v2x_rsu.sinr_ext = dict([(rsu, -500 * np.ones(37*8)) for rsu in range(num_rsu)])
+        v2x_rsu.inr = dict([(rsu, -500 * np.ones(37*8)) for rsu in range(num_rsu)])
 
-        imt_base_stations.antenna = np.empty(num_bs, dtype=AntennaBeamformingImt)
-        par = param_ant.get_antenna_parameters("BS", "RX")
+        v2x_rsu.antenna = np.empty(num_rsu, dtype=AntennaBeamformingImt)
+        par = param_ant.get_antenna_parameters("V2X_I", "RX")
 
-        for i in range(num_bs):
-            imt_base_stations.antenna[i] = \
-            AntennaBeamformingImt(par, imt_base_stations.azimuth[i],\
-                                  imt_base_stations.elevation[i])
+        for i in range(num_rsu):
+            v2x_rsu.antenna[i] = \
+            AntennaBeamformingImt(par, v2x_rsu.azimuth[i],\
+                                  v2x_rsu.elevation[i])
 
-        #imt_base_stations.antenna = [AntennaOmni(0) for bs in range(num_bs)]
-        imt_base_stations.bandwidth = param.bandwidth*np.ones(num_bs)
-        imt_base_stations.center_freq = param.frequency*np.ones(num_bs)
-        imt_base_stations.noise_figure = param.bs_noise_figure*np.ones(num_bs)
-        imt_base_stations.thermal_noise = -500*np.ones(num_bs)
+        #v2x_rsu.antenna = [AntennaOmni(0) for bs in range(num_bs)]
+        v2x_rsu.bandwidth = param.bandwidth*np.ones(num_rsu)
+        v2x_rsu.center_freq = param.frequency*np.ones(num_rsu)
+        v2x_rsu.noise_figure = param.rsu_noise_figure*np.ones(num_rsu)
+        v2x_rsu.thermal_noise = -500*np.ones(num_rsu)
 
         if param.spectral_mask == "ITU 265-E":
-            imt_base_stations.spectral_mask = SpectralMaskImt(StationType.IMT_BS,param.frequency,\
+            v2x_rsu.spectral_mask = SpectralMaskImt(StationType.IMT_BS,param.frequency,\
                                                               param.bandwidth,scenario = param.topology)
         elif param.spectral_mask == "3GPP 36.104":
-            imt_base_stations.spectral_mask = SpectralMask3Gpp(StationType.IMT_BS,param.frequency,\
+            v2x_rsu.spectral_mask = SpectralMask3Gpp(StationType.IMT_BS,param.frequency,\
                                                                param.bandwidth)
 
-        return imt_base_stations
+        return v2x_rsu
+#
+#    @staticmethod
+#    def generate_imt_ue(param: ParametersImt,
+#                        param_ant: ParametersAntennaImt,
+#                        topology: Topology,
+#                        random_number_gen: np.random.RandomState)-> StationManager:
+#
+#        if param.topology == "INDOOR":
+#            return StationFactory.generate_imt_ue_indoor(param, param_ant, random_number_gen, topology)
+#        else:
+#            return StationFactory.generate_imt_ue_outdoor(param, param_ant, random_number_gen, topology)
+#
+#
+#    @staticmethod
+#    def generate_imt_ue_outdoor(param: ParametersImt,
+#                                param_ant: ParametersAntennaImt,
+#                                random_number_gen: np.random.RandomState,
+#                                topology: Topology) -> StationManager:
+#        num_bs = topology.num_base_stations
+#        num_ue_per_bs = param.ue_k*param.ue_k_m
+#
+#        num_ue = num_bs * num_ue_per_bs
+#
+#        imt_ue = StationManager(num_ue)
+#        imt_ue.station_type = StationType.IMT_UE
+#
+#        ue_x = list()
+#        ue_y = list()
+#
+#        # Calculate UE pointing
+#        azimuth_range = (-60, 60)
+#        azimuth = (azimuth_range[1] - azimuth_range[0])*random_number_gen.random_sample(num_ue) + azimuth_range[0]
+#        # Remove the randomness from azimuth and you will have a perfect pointing
+#        elevation_range = (-90, 90)
+#        elevation = (elevation_range[1] - elevation_range[0])*random_number_gen.random_sample(num_ue) + \
+#                    elevation_range[0]
+#
+#        if param.ue_distribution_type.upper() == "UNIFORM":
+#
+#            if not (type(topology) is TopologyMacrocell):
+#                sys.stderr.write("ERROR\nUniform UE distribution is currently supported only with Macrocell topology")
+#                sys.exit(1)
+#
+#            [ue_x, ue_y, theta, distance] = StationFactory.get_random_position(num_ue, topology, random_number_gen,
+#                                                                               param.minimum_separation_distance_bs_ue )
+#            psi = np.degrees(np.arctan((param.bs_height - param.ue_height) / distance))
+#
+#            imt_ue.azimuth = (azimuth + theta + np.pi/2)
+#            imt_ue.elevation = elevation + psi
+#
+#
+#        elif param.ue_distribution_type.upper() == "ANGLE_AND_DISTANCE":
+#            # The Rayleigh and Normal distribution parameters (mean, scale and cutoff)
+#            # were agreed in TG 5/1 meeting (May 2017).
+#
+#            if param.ue_distribution_distance.upper() == "RAYLEIGH":
+#                # For the distance between UE and BS, it is desired that 99% of UE's
+#                # are located inside the [soft] cell edge, i.e. Prob(d<d_edge) = 99%.
+#                # Since the distance is modeled by a random variable with Rayleigh
+#                # distribution, we use the quantile function to find that
+#                # sigma = distance/3.0345. So we always distibute UE's in order to meet
+#                # the requirement Prob(d<d_edge) = 99% for a given cell radius.
+#                radius_scale = topology.cell_radius / 3.0345
+#                radius = random_number_gen.rayleigh(radius_scale, num_ue)
+#            elif param.ue_distribution_distance.upper() == "UNIFORM":
+#                radius = topology.cell_radius * random_number_gen.random_sample(num_ue)
+#            else:
+#                sys.stderr.write("ERROR\nInvalid UE distance distribution: " + param.ue_distribution_distance)
+#                sys.exit(1)
+#
+#            if param.ue_distribution_azimuth.upper() == "NORMAL":
+#                # In case of the angles, we generate N times the number of UE's because
+#                # the angle cutoff will discard 5% of the terminals whose angle is
+#                # outside the angular sector defined by [-60, 60]. So, N = 1.4 seems to
+#                # be a safe choice.
+#                N = 1.4
+#                angle_scale = 30
+#                angle_mean = 0
+#                angle_n = random_number_gen.normal(angle_mean, angle_scale, int(N * num_ue))
+#
+#                angle_cutoff = 60
+#                idx = np.where((angle_n < angle_cutoff) & (angle_n > -angle_cutoff))[0][:num_ue]
+#                angle = angle_n[idx]
+#            elif param.ue_distribution_azimuth.upper() == "UNIFORM":
+#                azimuth_range = (-60, 60)
+#                angle = (azimuth_range[1] - azimuth_range[0]) * random_number_gen.random_sample(num_ue) \
+#                        + azimuth_range[0]
+#            else:
+#                sys.stderr.write("ERROR\nInvalid UE azimuth distribution: " + param.ue_distribution_distance)
+#                sys.exit(1)
+#
+#            for bs in range(num_bs):
+#                idx = [i for i in range(bs * num_ue_per_bs, bs * num_ue_per_bs + num_ue_per_bs)]
+#                # theta is the horizontal angle of the UE wrt the serving BS
+#                theta = topology.azimuth[bs] + angle[idx]
+#                # calculate UE position in x-y coordinates
+#                x = topology.x[bs] + radius[idx] * np.cos(np.radians(theta))
+#                y = topology.y[bs] + radius[idx] * np.sin(np.radians(theta))
+#                ue_x.extend(x)
+#                ue_y.extend(y)
+#
+#                # calculate UE azimuth wrt serving BS
+#                imt_ue.azimuth[idx] = (azimuth[idx] + theta + 180) % 360
+#
+#                # calculate elevation angle
+#                # psi is the vertical angle of the UE wrt the serving BS
+#                distance = np.sqrt((topology.x[bs] - x) ** 2 + (topology.y[bs] - y) ** 2)
+#                psi = np.degrees(np.arctan((param.bs_height - param.ue_height) / distance))
+#                imt_ue.elevation[idx] = elevation[idx] + psi
+#        else:
+#            sys.stderr.write("ERROR\nInvalid UE distribution type: " + param.ue_distribution_type)
+#            sys.exit(1)
+#
+#        imt_ue.x = np.array(ue_x)
+#        imt_ue.y = np.array(ue_y)
+#
+#        imt_ue.active = np.zeros(num_ue, dtype=bool)
+#        imt_ue.height = param.ue_height*np.ones(num_ue)
+#        imt_ue.indoor = random_number_gen.random_sample(num_ue) <= (param.ue_indoor_percent/100)
+#        imt_ue.rx_interference = -500*np.ones(num_ue)
+#        imt_ue.ext_interference = -500*np.ones(num_ue)
+#
+#        # TODO: this piece of code works only for uplink
+#        par = param_ant.get_antenna_parameters("UE","TX")
+#        for i in range(num_ue):
+#            imt_ue.antenna[i] = AntennaBeamformingImt(par, imt_ue.azimuth[i],
+#                                                           imt_ue.elevation[i])
+#
+#        #imt_ue.antenna = [AntennaOmni(0) for bs in range(num_ue)]
+#        imt_ue.bandwidth = param.bandwidth*np.ones(num_ue)
+#        imt_ue.center_freq = param.frequency*np.ones(num_ue)
+#        imt_ue.noise_figure = param.ue_noise_figure*np.ones(num_ue)
+#
+#        if param.spectral_mask == "ITU 265-E":
+#            imt_ue.spectral_mask = SpectralMaskImt(StationType.IMT_UE,param.frequency,\
+#                                                   param.bandwidth,scenario = "OUTDOOR")
+#
+#        elif param.spectral_mask == "3GPP 36.104":
+#            imt_ue.spectral_mask = SpectralMask3Gpp(StationType.IMT_UE,param.frequency,\
+#                                                   param.bandwidth)
+#
+#        imt_ue.spectral_mask.set_mask()
+#
+#        return imt_ue
+#
+#
+#    @staticmethod
+#    def generate_imt_ue_indoor(param: ParametersImt,
+#                               param_ant: ParametersAntennaImt,
+#                               random_number_gen: np.random.RandomState,
+#                               topology: Topology) -> StationManager:
+#        num_bs = topology.num_base_stations
+#        num_ue_per_bs = param.ue_k*param.ue_k_m
+#        num_ue = num_bs*num_ue_per_bs
+#
+#        imt_ue = StationManager(num_ue)
+#        imt_ue.station_type = StationType.IMT_UE
+#        ue_x = list()
+#        ue_y = list()
+#
+#        # initially set all UE's as indoor
+#        imt_ue.indoor = np.ones(num_ue, dtype=bool)
+#
+#        # Calculate UE pointing
+#        azimuth_range = (-60, 60)
+#        azimuth = (azimuth_range[1] - azimuth_range[0])*random_number_gen.random_sample(num_ue) + azimuth_range[0]
+#        # Remove the randomness from azimuth and you will have a perfect pointing
+#        #azimuth = np.zeros(num_ue)
+#        elevation_range = (-90, 90)
+#        elevation = (elevation_range[1] - elevation_range[0])*random_number_gen.random_sample(num_ue) + elevation_range[0]
+#
+#        delta_x = (topology.b_w/math.sqrt(topology.ue_indoor_percent) - topology.b_w)/2
+#        delta_y = (topology.b_d/math.sqrt(topology.ue_indoor_percent) - topology.b_d)/2
+#
+#        for bs in range(num_bs):
+#            idx = [i for i in range(bs*num_ue_per_bs, bs*num_ue_per_bs + num_ue_per_bs)]
+#            if bs % 3 == 0:
+#                x_min = topology.x[bs] - topology.cell_radius - delta_x
+#                x_max = topology.x[bs] + topology.cell_radius
+#            if bs % 3 == 1:
+#                x_min = topology.x[bs] - topology.cell_radius
+#                x_max = topology.x[bs] + topology.cell_radius
+#            if bs % 3 == 2:
+#                x_min = topology.x[bs] - topology.cell_radius
+#                x_max = topology.x[bs] + topology.cell_radius + delta_x
+#            y_min = topology.y[bs] - topology.b_d/2 - delta_y
+#            y_max = topology.y[bs] + topology.b_d/2 + delta_y
+#            x = (x_max - x_min)*random_number_gen.random_sample(num_ue_per_bs) + x_min
+#            y = (y_max - y_min)*random_number_gen.random_sample(num_ue_per_bs) + y_min
+#            ue_x.extend(x)
+#            ue_y.extend(y)
+#
+#            # theta is the horizontal angle of the UE wrt the serving BS
+#            theta = np.degrees(np.arctan2(y - topology.y[bs], x - topology.x[bs]))
+#            # calculate UE azimuth wrt serving BS
+#            imt_ue.azimuth[idx] = (azimuth[idx] + theta + 180)%360
+#
+#            # calculate elevation angle
+#            # psi is the vertical angle of the UE wrt the serving BS
+#            distance = np.sqrt((topology.x[bs] - x)**2 + (topology.y[bs] - y)**2)
+#            psi = np.degrees(np.arctan((param.bs_height - param.ue_height)/distance))
+#            imt_ue.elevation[idx] = elevation[idx] + psi
+#
+#            # check if UE is indoor
+#            if bs % 3 == 0:
+#                out = (x < topology.x[bs] - topology.cell_radius) | \
+#                      (y > topology.y[bs] + topology.b_d/2) | \
+#                      (y < topology.y[bs] - topology.b_d/2)
+#            if bs % 3 == 1:
+#                out = (y > topology.y[bs] + topology.b_d/2) | \
+#                      (y < topology.y[bs] - topology.b_d/2)
+#            if bs % 3 == 2:
+#                out = (x > topology.x[bs] + topology.cell_radius) | \
+#                      (y > topology.y[bs] + topology.b_d/2) | \
+#                      (y < topology.y[bs] - topology.b_d/2)
+#            imt_ue.indoor[idx] = ~ out
+#
+#        imt_ue.x = np.array(ue_x)
+#        imt_ue.y = np.array(ue_y)
+#
+#        imt_ue.active = np.zeros(num_ue, dtype=bool)
+#        imt_ue.height = param.ue_height*np.ones(num_ue)
+#        imt_ue.rx_interference = -500*np.ones(num_ue)
+#        imt_ue.ext_interference = -500*np.ones(num_ue)
+#
+#        # TODO: this piece of code works only for uplink
+#        par = param_ant.get_antenna_parameters("UE","TX")
+#        for i in range(num_ue):
+#            imt_ue.antenna[i] = AntennaBeamformingImt(par, imt_ue.azimuth[i],
+#                                                         imt_ue.elevation[i])
+#
+#        #imt_ue.antenna = [AntennaOmni(0) for bs in range(num_ue)]
+#        imt_ue.bandwidth = param.bandwidth*np.ones(num_ue)
+#        imt_ue.center_freq = param.frequency*np.ones(num_ue)
+#        imt_ue.noise_figure = param.ue_noise_figure*np.ones(num_ue)
+#
+#        if param.spectral_mask == "ITU 265-E":
+#            imt_ue.spectral_mask = SpectralMaskImt(StationType.IMT_UE,param.frequency,\
+#                                                   param.bandwidth,scenario = "INDOOR")
+#
+#        elif param.spectral_mask == "3GPP 36.104":
+#            imt_ue.spectral_mask = SpectralMask3Gpp(StationType.IMT_UE,param.frequency,\
+#                                                   param.bandwidth)
+#
+#        imt_ue.spectral_mask.set_mask()
+#
+#        return imt_ue
 
     @staticmethod
-    def generate_imt_ue(param: ParametersImt,
-                        param_ant: ParametersAntennaImt,
-                        topology: Topology,
-                        random_number_gen: np.random.RandomState)-> StationManager:
-
-        if param.topology == "INDOOR":
-            return StationFactory.generate_imt_ue_indoor(param, param_ant, random_number_gen, topology)
-        else:
-            return StationFactory.generate_imt_ue_outdoor(param, param_ant, random_number_gen, topology)
-
-
-    @staticmethod
-    def generate_imt_ue_outdoor(param: ParametersImt,
-                                param_ant: ParametersAntennaImt,
-                                random_number_gen: np.random.RandomState,
-                                topology: Topology) -> StationManager:
-        num_bs = topology.num_base_stations
-        num_ue_per_bs = param.ue_k*param.ue_k_m
-
-        num_ue = num_bs * num_ue_per_bs
-
-        imt_ue = StationManager(num_ue)
-        imt_ue.station_type = StationType.IMT_UE
-
-        ue_x = list()
-        ue_y = list()
-
-        # Calculate UE pointing
-        azimuth_range = (-60, 60)
-        azimuth = (azimuth_range[1] - azimuth_range[0])*random_number_gen.random_sample(num_ue) + azimuth_range[0]
-        # Remove the randomness from azimuth and you will have a perfect pointing
-        elevation_range = (-90, 90)
-        elevation = (elevation_range[1] - elevation_range[0])*random_number_gen.random_sample(num_ue) + \
-                    elevation_range[0]
-
-        if param.ue_distribution_type.upper() == "UNIFORM":
-
-            if not (type(topology) is TopologyMacrocell):
-                sys.stderr.write("ERROR\nUniform UE distribution is currently supported only with Macrocell topology")
-                sys.exit(1)
-
-            [ue_x, ue_y, theta, distance] = StationFactory.get_random_position(num_ue, topology, random_number_gen,
-                                                                               param.minimum_separation_distance_bs_ue )
-            psi = np.degrees(np.arctan((param.bs_height - param.ue_height) / distance))
-
-            imt_ue.azimuth = (azimuth + theta + np.pi/2)
-            imt_ue.elevation = elevation + psi
-
-
-        elif param.ue_distribution_type.upper() == "ANGLE_AND_DISTANCE":
-            # The Rayleigh and Normal distribution parameters (mean, scale and cutoff)
-            # were agreed in TG 5/1 meeting (May 2017).
-
-            if param.ue_distribution_distance.upper() == "RAYLEIGH":
-                # For the distance between UE and BS, it is desired that 99% of UE's
-                # are located inside the [soft] cell edge, i.e. Prob(d<d_edge) = 99%.
-                # Since the distance is modeled by a random variable with Rayleigh
-                # distribution, we use the quantile function to find that
-                # sigma = distance/3.0345. So we always distibute UE's in order to meet
-                # the requirement Prob(d<d_edge) = 99% for a given cell radius.
-                radius_scale = topology.cell_radius / 3.0345
-                radius = random_number_gen.rayleigh(radius_scale, num_ue)
-            elif param.ue_distribution_distance.upper() == "UNIFORM":
-                radius = topology.cell_radius * random_number_gen.random_sample(num_ue)
-            else:
-                sys.stderr.write("ERROR\nInvalid UE distance distribution: " + param.ue_distribution_distance)
-                sys.exit(1)
-
-            if param.ue_distribution_azimuth.upper() == "NORMAL":
-                # In case of the angles, we generate N times the number of UE's because
-                # the angle cutoff will discard 5% of the terminals whose angle is
-                # outside the angular sector defined by [-60, 60]. So, N = 1.4 seems to
-                # be a safe choice.
-                N = 1.4
-                angle_scale = 30
-                angle_mean = 0
-                angle_n = random_number_gen.normal(angle_mean, angle_scale, int(N * num_ue))
-
-                angle_cutoff = 60
-                idx = np.where((angle_n < angle_cutoff) & (angle_n > -angle_cutoff))[0][:num_ue]
-                angle = angle_n[idx]
-            elif param.ue_distribution_azimuth.upper() == "UNIFORM":
-                azimuth_range = (-60, 60)
-                angle = (azimuth_range[1] - azimuth_range[0]) * random_number_gen.random_sample(num_ue) \
-                        + azimuth_range[0]
-            else:
-                sys.stderr.write("ERROR\nInvalid UE azimuth distribution: " + param.ue_distribution_distance)
-                sys.exit(1)
-
-            for bs in range(num_bs):
-                idx = [i for i in range(bs * num_ue_per_bs, bs * num_ue_per_bs + num_ue_per_bs)]
-                # theta is the horizontal angle of the UE wrt the serving BS
-                theta = topology.azimuth[bs] + angle[idx]
-                # calculate UE position in x-y coordinates
-                x = topology.x[bs] + radius[idx] * np.cos(np.radians(theta))
-                y = topology.y[bs] + radius[idx] * np.sin(np.radians(theta))
-                ue_x.extend(x)
-                ue_y.extend(y)
-
-                # calculate UE azimuth wrt serving BS
-                imt_ue.azimuth[idx] = (azimuth[idx] + theta + 180) % 360
-
-                # calculate elevation angle
-                # psi is the vertical angle of the UE wrt the serving BS
-                distance = np.sqrt((topology.x[bs] - x) ** 2 + (topology.y[bs] - y) ** 2)
-                psi = np.degrees(np.arctan((param.bs_height - param.ue_height) / distance))
-                imt_ue.elevation[idx] = elevation[idx] + psi
-        else:
-            sys.stderr.write("ERROR\nInvalid UE distribution type: " + param.ue_distribution_type)
-            sys.exit(1)
-
-        imt_ue.x = np.array(ue_x)
-        imt_ue.y = np.array(ue_y)
-
-        imt_ue.active = np.zeros(num_ue, dtype=bool)
-        imt_ue.height = param.ue_height*np.ones(num_ue)
-        imt_ue.indoor = random_number_gen.random_sample(num_ue) <= (param.ue_indoor_percent/100)
-        imt_ue.rx_interference = -500*np.ones(num_ue)
-        imt_ue.ext_interference = -500*np.ones(num_ue)
-
-        # TODO: this piece of code works only for uplink
-        par = param_ant.get_antenna_parameters("UE","TX")
-        for i in range(num_ue):
-            imt_ue.antenna[i] = AntennaBeamformingImt(par, imt_ue.azimuth[i],
-                                                           imt_ue.elevation[i])
-
-        #imt_ue.antenna = [AntennaOmni(0) for bs in range(num_ue)]
-        imt_ue.bandwidth = param.bandwidth*np.ones(num_ue)
-        imt_ue.center_freq = param.frequency*np.ones(num_ue)
-        imt_ue.noise_figure = param.ue_noise_figure*np.ones(num_ue)
-
-        if param.spectral_mask == "ITU 265-E":
-            imt_ue.spectral_mask = SpectralMaskImt(StationType.IMT_UE,param.frequency,\
-                                                   param.bandwidth,scenario = "OUTDOOR")
-
-        elif param.spectral_mask == "3GPP 36.104":
-            imt_ue.spectral_mask = SpectralMask3Gpp(StationType.IMT_UE,param.frequency,\
-                                                   param.bandwidth)
-
-        imt_ue.spectral_mask.set_mask()
-
-        return imt_ue
-
-
-    @staticmethod
-    def generate_imt_ue_indoor(param: ParametersImt,
-                               param_ant: ParametersAntennaImt,
-                               random_number_gen: np.random.RandomState,
-                               topology: Topology) -> StationManager:
-        num_bs = topology.num_base_stations
-        num_ue_per_bs = param.ue_k*param.ue_k_m
-        num_ue = num_bs*num_ue_per_bs
-
-        imt_ue = StationManager(num_ue)
-        imt_ue.station_type = StationType.IMT_UE
-        ue_x = list()
-        ue_y = list()
-
-        # initially set all UE's as indoor
-        imt_ue.indoor = np.ones(num_ue, dtype=bool)
-
-        # Calculate UE pointing
-        azimuth_range = (-60, 60)
-        azimuth = (azimuth_range[1] - azimuth_range[0])*random_number_gen.random_sample(num_ue) + azimuth_range[0]
-        # Remove the randomness from azimuth and you will have a perfect pointing
-        #azimuth = np.zeros(num_ue)
-        elevation_range = (-90, 90)
-        elevation = (elevation_range[1] - elevation_range[0])*random_number_gen.random_sample(num_ue) + elevation_range[0]
-
-        delta_x = (topology.b_w/math.sqrt(topology.ue_indoor_percent) - topology.b_w)/2
-        delta_y = (topology.b_d/math.sqrt(topology.ue_indoor_percent) - topology.b_d)/2
-
-        for bs in range(num_bs):
-            idx = [i for i in range(bs*num_ue_per_bs, bs*num_ue_per_bs + num_ue_per_bs)]
-            if bs % 3 == 0:
-                x_min = topology.x[bs] - topology.cell_radius - delta_x
-                x_max = topology.x[bs] + topology.cell_radius
-            if bs % 3 == 1:
-                x_min = topology.x[bs] - topology.cell_radius
-                x_max = topology.x[bs] + topology.cell_radius
-            if bs % 3 == 2:
-                x_min = topology.x[bs] - topology.cell_radius
-                x_max = topology.x[bs] + topology.cell_radius + delta_x
-            y_min = topology.y[bs] - topology.b_d/2 - delta_y
-            y_max = topology.y[bs] + topology.b_d/2 + delta_y
-            x = (x_max - x_min)*random_number_gen.random_sample(num_ue_per_bs) + x_min
-            y = (y_max - y_min)*random_number_gen.random_sample(num_ue_per_bs) + y_min
-            ue_x.extend(x)
-            ue_y.extend(y)
-
-            # theta is the horizontal angle of the UE wrt the serving BS
-            theta = np.degrees(np.arctan2(y - topology.y[bs], x - topology.x[bs]))
-            # calculate UE azimuth wrt serving BS
-            imt_ue.azimuth[idx] = (azimuth[idx] + theta + 180)%360
-
-            # calculate elevation angle
-            # psi is the vertical angle of the UE wrt the serving BS
-            distance = np.sqrt((topology.x[bs] - x)**2 + (topology.y[bs] - y)**2)
-            psi = np.degrees(np.arctan((param.bs_height - param.ue_height)/distance))
-            imt_ue.elevation[idx] = elevation[idx] + psi
-
-            # check if UE is indoor
-            if bs % 3 == 0:
-                out = (x < topology.x[bs] - topology.cell_radius) | \
-                      (y > topology.y[bs] + topology.b_d/2) | \
-                      (y < topology.y[bs] - topology.b_d/2)
-            if bs % 3 == 1:
-                out = (y > topology.y[bs] + topology.b_d/2) | \
-                      (y < topology.y[bs] - topology.b_d/2)
-            if bs % 3 == 2:
-                out = (x > topology.x[bs] + topology.cell_radius) | \
-                      (y > topology.y[bs] + topology.b_d/2) | \
-                      (y < topology.y[bs] - topology.b_d/2)
-            imt_ue.indoor[idx] = ~ out
-
-        imt_ue.x = np.array(ue_x)
-        imt_ue.y = np.array(ue_y)
-
-        imt_ue.active = np.zeros(num_ue, dtype=bool)
-        imt_ue.height = param.ue_height*np.ones(num_ue)
-        imt_ue.rx_interference = -500*np.ones(num_ue)
-        imt_ue.ext_interference = -500*np.ones(num_ue)
-
-        # TODO: this piece of code works only for uplink
-        par = param_ant.get_antenna_parameters("UE","TX")
-        for i in range(num_ue):
-            imt_ue.antenna[i] = AntennaBeamformingImt(par, imt_ue.azimuth[i],
-                                                         imt_ue.elevation[i])
-
-        #imt_ue.antenna = [AntennaOmni(0) for bs in range(num_ue)]
-        imt_ue.bandwidth = param.bandwidth*np.ones(num_ue)
-        imt_ue.center_freq = param.frequency*np.ones(num_ue)
-        imt_ue.noise_figure = param.ue_noise_figure*np.ones(num_ue)
-
-        if param.spectral_mask == "ITU 265-E":
-            imt_ue.spectral_mask = SpectralMaskImt(StationType.IMT_UE,param.frequency,\
-                                                   param.bandwidth,scenario = "INDOOR")
-
-        elif param.spectral_mask == "3GPP 36.104":
-            imt_ue.spectral_mask = SpectralMask3Gpp(StationType.IMT_UE,param.frequency,\
-                                                   param.bandwidth)
-
-        imt_ue.spectral_mask.set_mask()
-
-        return imt_ue
-
-    @staticmethod
-    def generate_v2i_v(param: ParametersV2i,
-                               param_ant: ParametersAntennaImt,
-                               random_number_gen: np.random.RandomState,
-                               topology: Topology) -> StationManager:
+    def generate_v2i_v(param: ParametersV2x,
+                       param_ant: ParametersAntennaV2x,
+                       random_number_gen: np.random.RandomState,
+                       topology: Topology) -> StationManager:
         
-        num_bs = topology.num_base_stations
+        num_rsu = topology.num_rsu
+        
+        rsu = StationManager(num_rsu)
+        rsu.active = np.zeros(num_rsu, dtype=bool)
         
         # According ETSI TR 102 681 veicle quantity for the 5x5 grid
         num_v_per_street = 37   # represents 290 veicles per grid, for reference grid exist 8 streets 290/8=36.25
-        num_v = num_bs*num_v_per_street
+        num_v = num_rsu*num_v_per_street*8
 
         v2i_v = StationManager(num_v)
         v2i_v.station_type = StationType.V2X_V
@@ -363,6 +367,15 @@ class StationFactory(object):
 
         # initially set all Veicles as outdoor
         v2i_v.v2i = np.ones(num_v, dtype=bool)
+        
+        # Calculate UE pointing
+        azimuth_range = (-60, 60)
+        azimuth = (azimuth_range[1] - azimuth_range[0])*random_number_gen.random_sample(num_v) + azimuth_range[0]
+        # Remove the randomness from azimuth and you will have a perfect pointing
+        #azimuth = np.zeros(num_ue)
+        elevation_range = (-90, 90)
+        elevation = (elevation_range[1] - elevation_range[0])*random_number_gen.random_sample(num_v) + elevation_range[0]
+
 
         # veicles inside streets for reference grid
         for b in range(8):  # Each block of reference grid 5x5
@@ -394,15 +407,52 @@ class StationFactory(object):
             v_x.extend(x)
             v_y.extend(y)
         
-        for bs in range(num_bs):
-            x2 = v_x + (topology.x[bs] - topology.x[0])
-            y2 = v_y + (topology.y[bs] - topology.y[0])
+        for rsu in range(num_rsu):
+            idx = [i for i in range(rsu*37, rsu*37 + 37)]
+            x2 = v_x + (topology.x[rsu] - topology.x[0])
+            y2 = v_y + (topology.y[rsu] - topology.y[0])
             v_x2.extend(x2)
             v_y2.extend(y2)
+            # theta is the horizontal angle of the UE wrt the serving BS
+            theta = np.degrees(np.arctan2(y - topology.y[rsu], x - topology.x[rsu]))
+            # calculate UE azimuth wrt serving BS
+            v2i_v.azimuth[idx] = (azimuth[idx] + theta + 180)%360
+
+            # calculate elevation angle
+            # psi is the vertical angle of the UE wrt the serving BS
+            distance = np.sqrt((topology.x[rsu] - x)**2 + (topology.y[rsu] - y)**2)
+            psi = np.degrees(np.arctan((param.rsu_height - param.v_height)/distance))
+            v2i_v.elevation[idx] = elevation[idx] + psi
+
             
         v2i_v.x = np.array(v_x2)
         v2i_v.y = np.array(v_y2)
-            
+        
+        v2i_v.active = np.zeros(num_v, dtype=bool)
+        v2i_v.height = param.v_height*np.ones(num_v)
+        v2i_v.rx_interference = -500*np.ones(num_v)
+        v2i_v.ext_interference = -500*np.ones(num_v)
+        # TODO: this piece of code works only for uplink
+        par = param_ant.get_antenna_parameters("V2X_V","TX")
+        for i in range(num_v):
+            v2i_v.antenna[i] = AntennaBeamformingImt(par, v2i_v.azimuth[i],
+                                                         v2i_v.elevation[i])
+
+        #imt_ue.antenna = [AntennaOmni(0) for bs in range(num_ue)]
+        v2i_v.bandwidth = param.bandwidth*np.ones(num_v)
+        v2i_v.center_freq = param.frequency*np.ones(num_v)
+        v2i_v.noise_figure = param.v_noise_figure*np.ones(num_v)
+
+        if param.spectral_mask == "ITU 265-E":
+            v2i_v.spectral_mask = SpectralMaskImt(StationType.V2X_V,param.frequency,\
+                                                   param.bandwidth,scenario = "V2I")
+
+        elif param.spectral_mask == "3GPP 36.104":
+            v2i_v.spectral_mask = SpectralMask3Gpp(StationType.V2X_V,param.frequency,\
+                                                   param.bandwidth)
+
+#        v2i_v.spectral_mask.set_mask()    
+        
         return v2i_v
     
     
@@ -751,10 +801,16 @@ if __name__ == '__main__':
     # plot uniform distribution in macrocell scenario
 
     factory = StationFactory()
-    param = ParametersV2i()
+    param = ParametersV2x()
     param.n_rows = 5
     param.n_colums = 4
     param.street_width = 14
+    param.v_height = 1.5
+    param.rsu_height = 6
+    param.bandwidth = 10
+    param.frequency = 5800
+    param.v_noise_figure = 6
+    param.spectral_mask = 0
     topology = TopologyV2i(param)
     topology.calculate_coordinates()
     random_number_gen = np.random.RandomState()
@@ -772,30 +828,30 @@ if __name__ == '__main__':
 
     params = ParamsAux()
 
-    ant_param = ParametersAntennaImt()
+    ant_param = ParametersAntennaV2x()
 
-    ant_param.bs_element_pattern = "F1336"
-    ant_param.bs_tx_element_max_g = 5
-    ant_param.bs_tx_element_phi_deg_3db = 65
-    ant_param.bs_tx_element_theta_deg_3db = 65
-    ant_param.bs_tx_element_am = 30
-    ant_param.bs_tx_element_sla_v = 30
-    ant_param.bs_tx_n_rows = 8
-    ant_param.bs_tx_n_columns = 8
-    ant_param.bs_tx_element_horiz_spacing = 0.5
-    ant_param.bs_tx_element_vert_spacing = 0.5
-    ant_param.bs_downtilt_deg = 10
+    ant_param.rsu_element_pattern = "F1336"
+    ant_param.rsu_tx_element_max_g = 5
+    ant_param.rsu_tx_element_phi_deg_3db = 65
+    ant_param.rsu_tx_element_theta_deg_3db = 65
+    ant_param.rsu_tx_element_am = 30
+    ant_param.rsu_tx_element_sla_v = 30
+    ant_param.rsu_tx_n_rows = 8
+    ant_param.rsu_tx_n_columns = 8
+    ant_param.rsu_tx_element_horiz_spacing = 0.5
+    ant_param.rsu_tx_element_vert_spacing = 0.5
+    ant_param.rsu_downtilt_deg = 10
 
-    ant_param.ue_element_pattern = "FIXED"
-    ant_param.ue_tx_element_max_g = 5
-    ant_param.ue_tx_element_phi_deg_3db = 90
-    ant_param.ue_tx_element_theta_deg_3db = 90
-    ant_param.ue_tx_element_am = 25
-    ant_param.ue_tx_element_sla_v = 25
-    ant_param.ue_tx_n_rows = 4
-    ant_param.ue_tx_n_columns = 4
-    ant_param.ue_tx_element_horiz_spacing = 0.5
-    ant_param.ue_tx_element_vert_spacing = 0.5
+    ant_param.v_element_pattern = "FIXED"
+    ant_param.v_tx_element_max_g = 5
+    ant_param.v_tx_element_phi_deg_3db = 90
+    ant_param.v_tx_element_theta_deg_3db = 90
+    ant_param.v_tx_element_am = 25
+    ant_param.v_tx_element_sla_v = 25
+    ant_param.v_tx_n_rows = 4
+    ant_param.v_tx_n_columns = 4
+    ant_param.v_tx_element_horiz_spacing = 0.5
+    ant_param.v_tx_element_vert_spacing = 0.5
 
     v2i_v = factory.generate_v2i_v(param, ant_param, random_number_gen, topology)
 

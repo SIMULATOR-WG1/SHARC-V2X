@@ -3,6 +3,7 @@
 Created on Wed Jan 11 19:06:41 2017
 
 @author: edgar
+Modified for V2X project on Jul 10 by Carlos Rodriguez
 """
 
 import numpy as np
@@ -31,7 +32,7 @@ class SimulationDownlink(Simulation):
 
         random_number_gen = np.random.RandomState(seed)
 
-        self.propagation_imt = PropagationFactory.create_propagation(self.parameters.imt.channel_model, self.parameters,
+        self.propagation_v2i = PropagationFactory.create_propagation(self.parameters.v2x.channel_model, self.parameters,
                                                                     random_number_gen)
         self.propagation_system = PropagationFactory.create_propagation(self.param_system.channel_model, self.parameters,
                                                                        random_number_gen)
@@ -41,38 +42,37 @@ class SimulationDownlink(Simulation):
         # or not
         self.topology.calculate_coordinates(random_number_gen)
 
-        # Create the base stations (remember that it takes into account the
+        # Create the RSU (remember that it takes into account the
         # network load factor)
-        self.bs = StationFactory.generate_imt_base_stations(self.parameters.imt,
-                                                            self.parameters.antenna_imt,
+        self.rsu = StationFactory.generate_v2x_base_stations(self.parameters.v2x,
+                                                            self.parameters.antenna_v2x,
                                                             self.topology, random_number_gen)
-
         # Create the other system (FSS, HAPS, etc...)
         self.system = StationFactory.generate_system(self.parameters, self.topology, random_number_gen)
 
-        # Create IMT user equipments
-        self.ue = StationFactory.generate_imt_ue(self.parameters.imt,
-                                                 self.parameters.antenna_imt,
-                                                 self.topology, random_number_gen)
+        # Create Veicles 
+        self.v = StationFactory.generate_v2i_v(self.parameters.v2x,
+                                                 self.parameters.antenna_v2x,random_number_gen,
+                                                 self.topology)
 
-        self.connect_ue_to_bs()
-        self.select_ue(random_number_gen)
+        self.connect_v_to_rsu()
+        self.select_v(random_number_gen)
 
         # Calculate coupling loss after beams are created
-        self.coupling_loss_imt = self.calculate_coupling_loss(self.bs,
-                                                              self.ue,
-                                                              self.propagation_imt)
+        self.coupling_loss_v2x = self.calculate_coupling_loss(self.rsu,
+                                                              self.v,
+                                                              self.propagation_v2i)
         self.scheduler()
         self.power_control()
 
-        if self.parameters.imt.interfered_with:
+        if self.parameters.v2x.interfered_with:
             # Execute this piece of code if the other system generates
-            # interference into IMT
+            # interference into V2X
             self.calculate_sinr()
             self.calculate_sinr_ext()
             pass
         else:
-            # Execute this piece of code if IMT generates interference into
+            # Execute this piece of code if V2X generates interference into
             # the other system
             self.calculate_sinr()
             self.calculate_external_interference()
@@ -88,106 +88,106 @@ class SimulationDownlink(Simulation):
         Apply downlink power control algorithm
         """
         # Currently, the maximum transmit power of the base station is equaly
-        # divided among the selected UEs
-        total_power = self.parameters.imt.bs_conducted_power \
-                      + self.bs_power_gain
-        tx_power = total_power - 10 * math.log10(self.parameters.imt.ue_k)
+        # divided among the selected Veicles
+        total_power = self.parameters.v2x.rsu_conducted_power \
+                      + self.rsu_power_gain
+        tx_power = total_power - 10 * math.log10(37*8)
         # calculate transmit powers to have a structure such as
-        # {bs_1: [pwr_1, pwr_2,...], ...}, where bs_1 is the base station id,
-        # pwr_1 is the transmit power from bs_1 to ue_1, pwr_2 is the transmit
-        # power from bs_1 to ue_2, etc
-        bs_active = np.where(self.bs.active)[0]
-        self.bs.tx_power = dict([(bs, tx_power*np.ones(self.parameters.imt.ue_k)) for bs in bs_active])
+        # {rsu_1: [pwr_1, pwr_2,...], ...}, where rsu_1 is the RSU id,
+        # pwr_1 is the transmit power from rsu_1 to v_1, pwr_2 is the transmit
+        # power from rsu_1 to v_2, etc
+        rsu_active = np.where(self.rsu.active)[0]
+        self.rsu.tx_power = dict([(rsu, tx_power*np.ones(37*8)) for rsu in rsu_active])
 
         # Update the spectral mask
         if self.adjacent_channel:
-            self.bs.spectral_mask.set_mask(power = total_power)
+            self.rsu.spectral_mask.set_mask(power = total_power)
 
     def calculate_sinr(self):
         """
         Calculates the downlink SINR for each UE.
         """
-        bs_active = np.where(self.bs.active)[0]
-        for bs in bs_active:
-            ue = self.link[bs]
-            self.ue.rx_power[ue] = self.bs.tx_power[bs] - self.parameters.imt.bs_ohmic_loss \
-                                       - self.coupling_loss_imt[bs,ue] \
-                                       - self.parameters.imt.ue_body_loss \
-                                       - self.parameters.imt.ue_ohmic_loss
+        rsu_active = np.where(self.rsu.active)[0]
+        for rsu in rsu_active:
+            v = self.link[rsu]
+            self.v.rx_power[v] = self.rsu.tx_power[rsu] - self.parameters.v2x.rsu_ohmic_loss \
+                                       - self.coupling_loss_v2x[rsu,v] \
+                                       - self.parameters.v2x.v_body_loss \
+                                       - self.parameters.v2x.v_ohmic_loss
 
-            # create a list with base stations that generate interference in ue_list
-            bs_interf = [b for b in bs_active if b not in [bs]]
+            # create a list with Rsu's that generate interference in v_list
+            rsu_interf = [b for b in rsu_active if b not in [rsu]]
 
             # calculate intra system interference
-            for bi in bs_interf:
-                interference = self.bs.tx_power[bi] - self.parameters.imt.bs_ohmic_loss \
-                                 - self.coupling_loss_imt[bi,ue] \
-                                 - self.parameters.imt.ue_body_loss - self.parameters.imt.ue_ohmic_loss
+            for bi in rsu_interf:
+                interference = self.rsu.tx_power[bi] - self.parameters.v2x.rsu_ohmic_loss \
+                                 - self.coupling_loss_v2x[bi,v] \
+                                 - self.parameters.v2x.v_body_loss - self.parameters.v2x.v_ohmic_loss
 
-                self.ue.rx_interference[ue] = 10*np.log10( \
-                    np.power(10, 0.1*self.ue.rx_interference[ue]) + np.power(10, 0.1*interference))
+                self.v.rx_interference[v] = 10*np.log10( \
+                    np.power(10, 0.1*self.v.rx_interference[v]) + np.power(10, 0.1*interference))
 
-        self.ue.thermal_noise = \
-            10*math.log10(self.parameters.imt.BOLTZMANN_CONSTANT*self.parameters.imt.noise_temperature*1e3) + \
-            10*np.log10(self.ue.bandwidth * 1e6) + \
-            self.ue.noise_figure
+        self.v.thermal_noise = \
+            10*math.log10(self.parameters.v2x.BOLTZMANN_CONSTANT*self.parameters.v2x.noise_temperature*1e3) + \
+            10*np.log10(self.v.bandwidth * 1e6) + \
+            self.v.noise_figure
 
-        self.ue.total_interference = \
-            10*np.log10(np.power(10, 0.1*self.ue.rx_interference) + \
-                        np.power(10, 0.1*self.ue.thermal_noise))
+        self.v.total_interference = \
+            10*np.log10(np.power(10, 0.1*self.v.rx_interference) + \
+                        np.power(10, 0.1*self.v.thermal_noise))
 
-        self.ue.sinr = self.ue.rx_power - self.ue.total_interference
-        self.ue.snr = self.ue.rx_power - self.ue.thermal_noise
+        self.v.sinr = self.v.rx_power - self.v.total_interference
+        self.v.snr = self.v.rx_power - self.v.thermal_noise
 
     def calculate_sinr_ext(self):
         """
         Calculates the downlink SINR and INR for each UE taking into account the
-        interference that is generated by the other system into IMT system.
+        interference that is generated by the other system into V2X system.
         """
-        self.coupling_loss_imt_system = self.calculate_coupling_loss(self.system,
-                                                                     self.ue,
+        self.coupling_loss_v2x_system = self.calculate_coupling_loss(self.system,
+                                                                     self.v,
                                                                      self.propagation_system,
                                                                      c_channel = self.co_channel)
 
-        # applying a bandwidth scaling factor since UE transmits on a portion
+        # applying a bandwidth scaling factor since Veicle transmits on a portion
         # of the satellite's bandwidth
-        # calculate interference only to active UE's
-        ue = np.where(self.ue.active)[0]
+        # calculate interference only to active Veicles
+        v = np.where(self.v.active)[0]
 
-        tx_power_sys = self.param_system.tx_power_density + 10*np.log10(self.ue.bandwidth[ue]*1e6) + 30
-        self.ue.ext_interference[ue] = tx_power_sys - self.coupling_loss_imt_system[ue] \
-                            - self.parameters.imt.ue_body_loss - self.parameters.imt.ue_ohmic_loss
+        tx_power_sys = self.param_system.tx_power_density + 10*np.log10(self.v.bandwidth[v]*1e6) + 30
+        self.v.ext_interference[v] = tx_power_sys - self.coupling_loss_v2x_system[v] \
+                            - self.parameters.v2x.v_body_loss - self.parameters.v2x.v_ohmic_loss
 
-        self.ue.sinr_ext[ue] = self.ue.rx_power[ue] \
-            - (10*np.log10(np.power(10, 0.1*self.ue.total_interference[ue]) + np.power(10, 0.1*self.ue.ext_interference[ue])))
-        self.ue.inr[ue] = self.ue.ext_interference[ue] - self.ue.thermal_noise[ue]
+        self.v.sinr_ext[v] = self.v.rx_power[v] \
+            - (10*np.log10(np.power(10, 0.1*self.v.total_interference[v]) + np.power(10, 0.1*self.v.ext_interference[v])))
+        self.v.inr[v] = self.v.ext_interference[v] - self.v.thermal_noise[v]
 
     def calculate_external_interference(self):
         """
-        Calculates interference that IMT system generates on other system
+        Calculates interference that V2X system generates on other system
         """
         polarization_loss = 3
 
         if self.co_channel:
-            self.coupling_loss_imt_system = self.calculate_coupling_loss(self.system,
-                                                                     self.bs,
+            self.coupling_loss_v2x_system = self.calculate_coupling_loss(self.system,
+                                                                     self.rsu,
                                                                      self.propagation_system) + polarization_loss
 
         if self.adjacent_channel:
-            self.coupling_loss_imt_system_adjacent = self.calculate_coupling_loss(self.system,
-                                                                     self.bs,
+            self.coupling_loss_v2x_system_adjacent = self.calculate_coupling_loss(self.system,
+                                                                     self.rsu,
                                                                      self.propagation_system,
                                                                      c_channel=False) + polarization_loss
 
-        # applying a bandwidth scaling factor since UE transmits on a portion
+        # applying a bandwidth scaling factor since Veicle transmits on a portion
         # of the interfered systems bandwidth
-        # calculate interference only from active UE's
+        # calculate interference only from active Veicles
         rx_interference = 0
 
-        bs_active = np.where(self.bs.active)[0]
-        for bs in bs_active:
+        rsu_active = np.where(self.rsu.active)[0]
+        for rsu in rsu_active:
 
-            active_beams = [i for i in range(bs*self.parameters.imt.ue_k, (bs+1)*self.parameters.imt.ue_k)]
+            active_beams = [i for i in range(rsu*37*8, (rsu+1)*37*8)]
 
             if self.co_channel:
                 if self.overlapping_bandwidth:
@@ -195,19 +195,19 @@ class SimulationDownlink(Simulation):
                 else:
                     acs = self.param_system.adjacent_ch_selectivity
 
-                interference = self.bs.tx_power[bs] - self.parameters.imt.bs_ohmic_loss \
-                             - self.coupling_loss_imt_system[active_beams]
-                weights = self.calculate_bw_weights(self.parameters.imt.bandwidth,
+                interference = self.rsu.tx_power[rsu] - self.parameters.v2x.rsu_ohmic_loss \
+                             - self.coupling_loss_v2x_system[active_beams]
+                weights = self.calculate_bw_weights(self.parameters.v2x.bandwidth,
                                                     self.param_system.bandwidth,
-                                                    self.parameters.imt.ue_k)
+                                                    37*8)
 
                 rx_interference += np.sum(weights*np.power(10, 0.1*interference)) / 10**(acs/10.)
 
             if self.adjacent_channel:
 
-                oob_power = self.bs.spectral_mask.power_calc(self.param_system.frequency,self.system.bandwidth)
+                oob_power = self.rsu.spectral_mask.power_calc(self.param_system.frequency,self.system.bandwidth)
 
-                oob_interference = oob_power - self.coupling_loss_imt_system_adjacent[active_beams[0]] \
+                oob_interference = oob_power - self.coupling_loss_v2x_system_adjacent[active_beams[0]] \
                                    + 10*np.log10((self.param_system.bandwidth - self.overlapping_bandwidth)/
                                                  self.param_system.bandwidth)
                                    
@@ -228,48 +228,48 @@ class SimulationDownlink(Simulation):
             self.system.pfd = 10*np.log10(10**(self.system.rx_interference/10)/self.system.antenna[0].effective_area)
 
     def collect_results(self, write_to_file: bool, snapshot_number: int):
-        if not self.parameters.imt.interfered_with:
+        if not self.parameters.v2x.interfered_with:
             self.results.system_inr.extend(self.system.inr.tolist())
             self.results.system_inr_scaled.extend([self.system.inr + 10*math.log10(self.param_system.inr_scaling)])
             if self.system.station_type is StationType.RAS:
                 self.results.system_pfd.extend([self.system.pfd])
                 self.results.system_dl_interf_power.extend([self.system.rx_interference])
 
-        bs_active = np.where(self.bs.active)[0]
-        for bs in bs_active:
-            ue = self.link[bs]
-            self.results.imt_path_loss.extend(self.path_loss_imt[bs,ue])
-            self.results.imt_coupling_loss.extend(self.coupling_loss_imt[bs,ue])
+        rsu_active = np.where(self.rsu.active)[0]
+        for rsu in rsu_active:
+            v = self.link[rsu]
+            self.results.v2x_path_loss.extend(self.path_loss_v2x[rsu,v])
+            self.results.v2x_coupling_loss.extend(self.coupling_loss_v2x[rsu,v])
 
-            self.results.imt_bs_antenna_gain.extend(self.imt_bs_antenna_gain[bs,ue])
-            self.results.imt_ue_antenna_gain.extend(self.imt_ue_antenna_gain[bs,ue])
+            self.results.v2x_rsu_antenna_gain.extend(self.v2x_rsu_antenna_gain[rsu,v])
+            self.results.v2x_v_antenna_gain.extend(self.v2x_v_antenna_gain[rsu,v])
 
-            tput = self.calculate_imt_tput(self.ue.sinr[ue],
-                                           self.parameters.imt.dl_sinr_min,
-                                           self.parameters.imt.dl_sinr_max,
-                                           self.parameters.imt.dl_attenuation_factor)
-            self.results.imt_dl_tput.extend(tput.tolist())
+            tput = self.calculate_v2x_tput(self.v.sinr[v],
+                                           self.parameters.v2x.dl_sinr_min,
+                                           self.parameters.v2x.dl_sinr_max,
+                                           self.parameters.v2x.dl_attenuation_factor)
+            self.results.v2x_dl_tput.extend(tput.tolist())
 
-            if self.parameters.imt.interfered_with:
-                tput_ext = self.calculate_imt_tput(self.ue.sinr_ext[ue],
-                                                   self.parameters.imt.dl_sinr_min,
-                                                   self.parameters.imt.dl_sinr_max,
-                                                   self.parameters.imt.dl_attenuation_factor)
-                self.results.imt_dl_tput_ext.extend(tput_ext.tolist())
-                self.results.imt_dl_sinr_ext.extend(self.ue.sinr_ext[ue].tolist())
-                self.results.imt_dl_inr.extend(self.ue.inr[ue].tolist())
+            if self.parameters.v2x.interfered_with:
+                tput_ext = self.calculate_v2x_tput(self.v.sinr_ext[v],
+                                                   self.parameters.v2x.dl_sinr_min,
+                                                   self.parameters.v2x.dl_sinr_max,
+                                                   self.parameters.v2x.dl_attenuation_factor)
+                self.results.v2x_dl_tput_ext.extend(tput_ext.tolist())
+                self.results.v2x_dl_sinr_ext.extend(self.v.sinr_ext[v].tolist())
+                self.results.v2x_dl_inr.extend(self.v.inr[v].tolist())
 
-                self.results.system_imt_antenna_gain.extend(self.system_imt_antenna_gain[0,ue])
-                self.results.imt_system_antenna_gain.extend(self.imt_system_antenna_gain[0,ue])
+                self.results.system_v2x_antenna_gain.extend(self.system_v2x_antenna_gain[0,v])
+                self.results.v2x_system_antenna_gain.extend(self.v2x_system_antenna_gain[0,v])
             else:
-                active_beams = [i for i in range(bs*self.parameters.imt.ue_k, (bs+1)*self.parameters.imt.ue_k)]
-                self.results.system_imt_antenna_gain.extend(self.system_imt_antenna_gain[0,active_beams])
-                self.results.imt_system_antenna_gain.extend(self.imt_system_antenna_gain[0,active_beams])
+                active_beams = [i for i in range(rsu*37*8, (rsu+1)*37*8)]
+                self.results.system_v2x_antenna_gain.extend(self.system_v2x_antenna_gain[0,active_beams])
+                self.results.v2x_system_antenna_gain.extend(self.v2x_system_antenna_gain[0,active_beams])
 
-            self.results.imt_dl_tx_power.extend(self.bs.tx_power[bs].tolist())
+            self.results.v2x_dl_tx_power.extend(self.rsu.tx_power[rsu].tolist())
 
-            self.results.imt_dl_sinr.extend(self.ue.sinr[ue].tolist())
-            self.results.imt_dl_snr.extend(self.ue.snr[ue].tolist())
+            self.results.v2x_dl_sinr.extend(self.v.sinr[v].tolist())
+            self.results.v2x_dl_snr.extend(self.v.snr[v].tolist())
 
         if write_to_file:
             self.results.write_files(snapshot_number)

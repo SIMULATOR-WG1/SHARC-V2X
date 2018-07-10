@@ -3,6 +3,7 @@
 Created on Mon Jul  3 10:29:47 2017
 
 @author: LeticiaValle_Mac
+Modified for V2X project on Jul 10 by Carlos Rodriguez
 """
 
 from sharc.propagation.propagation import Propagation
@@ -38,8 +39,8 @@ class PropagationUMi(Propagation):
         d_3D = kwargs["distance_3D"]
         d_2D = kwargs["distance_2D"]
         f = kwargs["frequency"]
-        h_bs = kwargs["bs_height"]
-        h_ue = kwargs["ue_height"]
+        h_rsu = kwargs["rsu_height"]
+        h_v = kwargs["v_height"]
         h_e = np.ones(d_2D.shape)
         std = kwargs["shadowing"]
 
@@ -59,11 +60,11 @@ class PropagationUMi(Propagation):
         loss = np.empty(d_2D.shape)
 
         if len(i_los[0]):
-            loss_los = self.get_loss_los(d_2D, d_3D, f, h_bs, h_ue, h_e, shadowing_los)
+            loss_los = self.get_loss_los(d_2D, d_3D, f, h_rsu, h_v, h_e, shadowing_los)
             loss[i_los] = loss_los[i_los]
 
         if len(i_nlos[0]):
-            loss_nlos = self.get_loss_nlos(d_2D, d_3D, f, h_bs, h_ue, h_e, shadowing_nlos)
+            loss_nlos = self.get_loss_nlos(d_2D, d_3D, f, h_rsu, h_v, h_e, shadowing_nlos)
             loss[i_nlos] = loss_nlos[i_nlos]
 
         return loss

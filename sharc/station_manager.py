@@ -3,6 +3,7 @@
 Created on Fri Feb  3 15:29:48 2017
 
 @author: edgar
+Modified for V2X project on Jul 10 by Carlos Rodriguez
 """
 
 import numpy as np

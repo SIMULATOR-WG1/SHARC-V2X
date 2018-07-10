@@ -3,6 +3,7 @@
 Created on Mon Dec 26 17:03:51 2016
 
 @author: edgar
+Modified for V2X project on Jul 10 by Carlos Rodriguez
 """
 
 from sharc.support.observable import Observable
@@ -44,7 +45,7 @@ class Model(Observable):
         self.parameters.set_file_name(self.param_file)
         self.parameters.read_params()
 
-        if self.parameters.general.imt_link == "DOWNLINK":
+        if self.parameters.general.v2x_link == "DOWNLINK":
             self.simulation = SimulationDownlink(self.parameters, self.param_file)
         else:
             self.simulation = SimulationUplink(self.parameters, self.param_file)
@@ -71,13 +72,13 @@ class Model(Observable):
     def get_description(self) -> str:
         param_system = self.simulation.param_system
 
-        description = "\nIMT:\n" \
-                            + "\tinterfered with: {:s}\n".format(str(self.parameters.imt.interfered_with)) \
-                            + "\tdirection: {:s}\n".format(self.parameters.general.imt_link) \
-                            + "\tfrequency: {:.3f} GHz\n".format(self.parameters.imt.frequency*1e-3) \
-                            + "\tbandwidth: {:.0f} MHz\n".format(self.parameters.imt.bandwidth) \
-                            + "\ttopology: {:s}\n".format(self.parameters.imt.topology) \
-                            + "\tpath loss model: {:s}\n".format(self.parameters.imt.channel_model)  \
+        description = "\nV2X:\n" \
+                            + "\tinterfered with: {:s}\n".format(str(self.parameters.v2x.interfered_with)) \
+                            + "\tdirection: {:s}\n".format(self.parameters.general.v2x_link) \
+                            + "\tfrequency: {:.3f} GHz\n".format(self.parameters.v2x.frequency*1e-3) \
+                            + "\tbandwidth: {:.0f} MHz\n".format(self.parameters.v2x.bandwidth) \
+                            + "\ttopology: {:s}\n".format(self.parameters.v2x.topology) \
+                            + "\tpath loss model: {:s}\n".format(self.parameters.v2x.channel_model)  \
                     + "{:s}:\n".format(self.parameters.general.system) \
                             + "\tfrequency: {:.3f} GHz\n".format(param_system.frequency*1e-3) \
                             + "\tbandwidth: {:.0f} MHz\n".format(param_system.bandwidth) \
