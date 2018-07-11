@@ -65,12 +65,12 @@ class PropagationP619(Propagation):
 
         earth_radius_km = sat_params.EARTH_RADIUS/1000
         a_acc = 0. # accumulated attenuation (in dB)
-        h = sat_params.imt_altitude/1000 # ray altitude in km
+        h = sat_params.v2x_altitude/1000 # ray altitude in km
         beta = (90-abs(apparent_elevation)) * np.pi / 180. # incidence angle
 
         if not surf_water_vapour_density:
             dummy, dummy, surf_water_vapour_density = \
-                self.atmosphere.get_reference_atmosphere_p835(sat_params.imt_lat_deg,
+                self.atmosphere.get_reference_atmosphere_p835(sat_params.v2x_lat_deg,
                                                                0, season="summer")
 
         # first, check if atmospheric loss was already calculated
@@ -202,11 +202,13 @@ class PropagationP619(Propagation):
             error_message = "different frequencies not supported in P619"
             raise ValueError(error_message)
 
-        atmospheric_gasses_loss = self._get_atmospheric_gasses_loss(frequency_MHz=freq_set,
-                                                                    apparent_elevation=np.mean(elevation["apparent"]),
-                                                                    sat_params=sat_params)
+        atmospheric_gasses_loss = 0
+        
+#        atmospheric_gasses_loss = self._get_atmospheric_gasses_loss(frequency_MHz=freq_set,
+#                                                                    apparent_elevation=np.mean(elevation["apparent"]),
+#                                                                    sat_params=sat_params)
         beam_spreading_attenuation = self._get_beam_spreading_att(elevation["free_space"],
-                                                                  sat_params.imt_altitude,
+                                                                  sat_params.v2x_altitude,
                                                                   earth_to_space)
         diffraction_loss = 0
 

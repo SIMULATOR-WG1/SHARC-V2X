@@ -112,7 +112,7 @@ class Simulation(ABC, Observable):
 
         self.topology.calculate_coordinates()
         num_rsu = self.topology.n_rows*self.topology.n_colums
-        num_v = num_rsu*37*8
+        num_v = num_rsu*6*8   # to change for variable related to # streets and #v per street
 
         self.rsu_power_gain = 10*math.log10(self.parameters.antenna_v2x.rsu_tx_n_rows*
                                            self.parameters.antenna_v2x.rsu_tx_n_columns)
@@ -141,7 +141,7 @@ class Simulation(ABC, Observable):
         self.num_rb_per_rsu = math.trunc((1-self.parameters.v2x.guard_band_ratio)* \
                             self.parameters.v2x.bandwidth /self.parameters.v2x.rb_bandwidth)
         # calculates the number of RB per Veicle on a given RSU
-        self.num_rb_per_v = math.trunc(self.num_rb_per_rsu/num_v)
+        self.num_rb_per_v = math.trunc(self.num_rb_per_rsu*self.topology.n_rows*self.topology.n_colums/num_v)
 
         self.results = Results(self.parameters_filename, self.parameters.general.overwrite_output)
 
@@ -194,13 +194,13 @@ class Simulation(ABC, Observable):
                 # define antenna gains
                 gain_a = self.calculate_gains(station_a, station_b)
                 gain_b = np.transpose(self.calculate_gains(station_b, station_a, c_channel))
-                sectors_in_node=37*8
+                sectors_in_node=6*8 # to change for variable related to # streets and #v per street
 
             else:
                 # define antenna gains
-                gain_a = np.repeat(self.calculate_gains(station_a, station_b), 37*8, 1)
+                gain_a = np.repeat(self.calculate_gains(station_a, station_b), 6*8, 1) # to change for variable related to # streets and #v per street
                 gain_b = np.transpose(self.calculate_gains(station_b, station_a, c_channel))
-                sectors_in_node = 37*8
+                sectors_in_node = 6*8 # to change for variable related to # streets and #v per street
 
             if self.parameters.v2x.interfered_with:
                 earth_to_space = False
@@ -255,7 +255,7 @@ class Simulation(ABC, Observable):
         """
         Link the Veicles to the serving RSU. 
         """
-        num_v_per_rsu = 37*8
+        num_v_per_rsu = 6*8 # to change for variable related to # streets and #v per street
         rsu_active = np.where(self.rsu.active)[0]
         for rsu in rsu_active:
             v_list = [i for i in range(rsu*num_v_per_rsu, rsu*num_v_per_rsu + num_v_per_rsu)]
@@ -273,7 +273,7 @@ class Simulation(ABC, Observable):
         for rsu in rsu_active:
             # select K Veicles among the ones that are connected to RSU
             random_number_gen.shuffle(self.link[rsu])
-            K = 37*8
+            K = 6*8  # to change for variable related to # streets and #v per street
             del self.link[rsu][K:]
             # Activate the selected Veicles and create beams
             if self.rsu.active[rsu]:
@@ -323,9 +323,9 @@ class Simulation(ABC, Observable):
                  station_2.station_type is StationType.FS or \
                  station_2.station_type is StationType.RNS or \
                  station_2.station_type is StationType.RAS):
-                phi = np.repeat(phi,37*8,0)
-                theta = np.repeat(theta,37*8,0)
-                beams_idx = np.tile(np.arange(37*8),self.rsu.num_stations)
+                phi = np.repeat(phi,6*8,0)  # to change for variable related to # streets and #v per street
+                theta = np.repeat(theta,6*8,0) # to change for variable related to # streets and #v per street
+                beams_idx = np.tile(np.arange(6*8),self.rsu.num_stations) # to change for variable related to # streets and #v per street
 
         elif(station_1.station_type is StationType.V2X_V):
             beams_idx = np.zeros(len(station_2_active),dtype=int)
@@ -347,7 +347,7 @@ class Simulation(ABC, Observable):
            (station_1.station_type is StationType.V2X_I and station_2.station_type is StationType.RNS) or \
            (station_1.station_type is StationType.V2X_I and station_2.station_type is StationType.RAS):
             for k in station_1_active:
-                for b in range(k*37*8,(k+1)*37*8):
+                for b in range(k*6*8,(k+1)*6*8): # to change for variable related to # streets and #v per street
                     gains[b,station_2_active] = station_1.antenna[k].calculate_gain(phi_vec=phi[b,station_2_active],
                                                                             theta_vec=theta[b,station_2_active],
                                                                             beams_l=np.array([beams_idx[b]]),
@@ -432,7 +432,7 @@ class Simulation(ABC, Observable):
         elif bw_v2x > bw_sys:
             weights = np.zeros(ue_k)
 
-            bw_per_rbg = bw_v2x / (37*8)
+            bw_per_rbg = bw_v2x / (6*8)  # to change for variable related to # streets and #v per street
 
             # number of resource block groups that will have weight equal to 1
             rb_ones = math.floor( bw_sys / bw_per_rbg )

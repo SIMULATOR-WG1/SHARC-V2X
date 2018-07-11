@@ -63,15 +63,15 @@ class StationFactory(object):
 
         v2x_rsu.active = random_number_gen.rand(num_rsu) < param.rsu_load_probability
         v2x_rsu.tx_power = param.rsu_conducted_power*np.ones(num_rsu)
-        v2x_rsu.rx_power = dict([(rsu, -500 * np.ones(37*8)) for rsu in range(num_rsu)])
-        v2x_rsu.rx_interference = dict([(rsu, -500 * np.ones(37*8)) for rsu in range(num_rsu)])
-        v2x_rsu.ext_interference = dict([(rsu, -500 * np.ones(37*8)) for rsu in range(num_rsu)])
-        v2x_rsu.total_interference = dict([(rsu, -500 * np.ones(37*8)) for rsu in range(num_rsu)])
+        v2x_rsu.rx_power = dict([(rsu, -500 * np.ones(6*8)) for rsu in range(num_rsu)])  # to change for variable related to # streets and #v per street
+        v2x_rsu.rx_interference = dict([(rsu, -500 * np.ones(6*8)) for rsu in range(num_rsu)]) # to change for variable related to # streets and #v per street
+        v2x_rsu.ext_interference = dict([(rsu, -500 * np.ones(6*8)) for rsu in range(num_rsu)]) # to change for variable related to # streets and #v per street
+        v2x_rsu.total_interference = dict([(rsu, -500 * np.ones(6*8)) for rsu in range(num_rsu)]) # to change for variable related to # streets and #v per street
 
-        v2x_rsu.snr = dict([(rsu, -500 * np.ones(37*8)) for rsu in range(num_rsu)])
-        v2x_rsu.sinr = dict([(rsu, -500 * np.ones(37*8)) for rsu in range(num_rsu)])
-        v2x_rsu.sinr_ext = dict([(rsu, -500 * np.ones(37*8)) for rsu in range(num_rsu)])
-        v2x_rsu.inr = dict([(rsu, -500 * np.ones(37*8)) for rsu in range(num_rsu)])
+        v2x_rsu.snr = dict([(rsu, -500 * np.ones(6*8)) for rsu in range(num_rsu)])  # to change for variable related to # streets and #v per street
+        v2x_rsu.sinr = dict([(rsu, -500 * np.ones(6*8)) for rsu in range(num_rsu)]) # to change for variable related to # streets and #v per street
+        v2x_rsu.sinr_ext = dict([(rsu, -500 * np.ones(6*8)) for rsu in range(num_rsu)])  # to change for variable related to # streets and #v per street
+        v2x_rsu.inr = dict([(rsu, -500 * np.ones(6*8)) for rsu in range(num_rsu)])  # to change for variable related to # streets and #v per street
 
         v2x_rsu.antenna = np.empty(num_rsu, dtype=AntennaBeamformingImt)
         par = param_ant.get_antenna_parameters("V2X_I", "RX")
@@ -355,7 +355,7 @@ class StationFactory(object):
         rsu.active = np.zeros(num_rsu, dtype=bool)
         
         # According ETSI TR 102 681 veicle quantity for the 5x5 grid
-        num_v_per_street = 37   # represents 290 veicles per grid, for reference grid exist 8 streets 290/8=36.25
+        num_v_per_street = 6   # represents 290 veicles per grid, for reference grid exist 8 streets 290/8=36.25
         num_v = num_rsu*num_v_per_street*8
 
         v2i_v = StationManager(num_v)
@@ -408,7 +408,7 @@ class StationFactory(object):
             v_y.extend(y)
         
         for rsu in range(num_rsu):
-            idx = [i for i in range(rsu*37, rsu*37 + 37)]
+            idx = [i for i in range(rsu*num_v_per_street, rsu*num_v_per_street + num_v_per_street)]
             x2 = v_x + (topology.x[rsu] - topology.x[0])
             y2 = v_y + (topology.y[rsu] - topology.y[0])
             v_x2.extend(x2)
@@ -485,20 +485,20 @@ class StationFactory(object):
 
         # calculate distances to the centre of the Earth
         dist_sat_centre_earth_km = (param.EARTH_RADIUS + param.altitude)/1000
-        dist_imt_centre_earth_km = (param.EARTH_RADIUS + param.imt_altitude)/1000
+        dist_imt_centre_earth_km = (param.EARTH_RADIUS + param.v2x_altitude)/1000
 
         # calculate Cartesian coordinates of satellite, with origin at centre of the Earth
         sat_lat_rad = param.lat_deg * np.pi / 180.
-        imt_long_diff_rad = param.imt_long_diff_deg * np.pi / 180.
-        x1 = dist_sat_centre_earth_km * np.cos(sat_lat_rad) * np.cos(imt_long_diff_rad)
-        y1 = dist_sat_centre_earth_km * np.cos(sat_lat_rad) * np.sin(imt_long_diff_rad)
+        v2x_long_diff_rad = param.v2x_long_diff_deg * np.pi / 180.
+        x1 = dist_sat_centre_earth_km * np.cos(sat_lat_rad) * np.cos(v2x_long_diff_rad)
+        y1 = dist_sat_centre_earth_km * np.cos(sat_lat_rad) * np.sin(v2x_long_diff_rad)
         z1 = dist_sat_centre_earth_km * np.sin(sat_lat_rad)
 
         # rotate axis and calculate coordinates with origin at IMT system
-        imt_lat_rad = param.imt_lat_deg * np.pi / 180.
-        fss_space_station.x = np.array([x1 * np.sin(imt_lat_rad) - z1 * np.cos(imt_lat_rad)]) * 1000
+        v2x_lat_rad = param.v2x_lat_deg * np.pi / 180.
+        fss_space_station.x = np.array([x1 * np.sin(v2x_lat_rad) - z1 * np.cos(v2x_lat_rad)]) * 1000
         fss_space_station.y = np.array([y1]) * 1000
-        fss_space_station.height = np.array([(z1 * np.sin(imt_lat_rad) + x1 * np.cos(imt_lat_rad)
+        fss_space_station.height = np.array([(z1 * np.sin(v2x_lat_rad) + x1 * np.cos(v2x_lat_rad)
                                              - dist_imt_centre_earth_km) * 1000])
 
         fss_space_station.azimuth = param.azimuth
@@ -802,8 +802,8 @@ if __name__ == '__main__':
 
     factory = StationFactory()
     param = ParametersV2x()
-    param.n_rows = 5
-    param.n_colums = 4
+    param.n_rows = 3
+    param.n_colums = 2
     param.street_width = 14
     param.v_height = 1.5
     param.rsu_height = 6

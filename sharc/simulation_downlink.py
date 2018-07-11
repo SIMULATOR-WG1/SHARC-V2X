@@ -91,13 +91,13 @@ class SimulationDownlink(Simulation):
         # divided among the selected Veicles
         total_power = self.parameters.v2x.rsu_conducted_power \
                       + self.rsu_power_gain
-        tx_power = total_power - 10 * math.log10(37*8)
+        tx_power = total_power - 10 * math.log10(6*8)  # to change for variable related to # streets and #v per street
         # calculate transmit powers to have a structure such as
         # {rsu_1: [pwr_1, pwr_2,...], ...}, where rsu_1 is the RSU id,
         # pwr_1 is the transmit power from rsu_1 to v_1, pwr_2 is the transmit
         # power from rsu_1 to v_2, etc
         rsu_active = np.where(self.rsu.active)[0]
-        self.rsu.tx_power = dict([(rsu, tx_power*np.ones(37*8)) for rsu in rsu_active])
+        self.rsu.tx_power = dict([(rsu, tx_power*np.ones(6*8)) for rsu in rsu_active]) # to change for variable related to # streets and #v per street
 
         # Update the spectral mask
         if self.adjacent_channel:
@@ -187,7 +187,7 @@ class SimulationDownlink(Simulation):
         rsu_active = np.where(self.rsu.active)[0]
         for rsu in rsu_active:
 
-            active_beams = [i for i in range(rsu*37*8, (rsu+1)*37*8)]
+            active_beams = [i for i in range(rsu*6*8, (rsu+1)*6*8)] # to change for variable related to # streets and #v per street
 
             if self.co_channel:
                 if self.overlapping_bandwidth:
@@ -199,7 +199,7 @@ class SimulationDownlink(Simulation):
                              - self.coupling_loss_v2x_system[active_beams]
                 weights = self.calculate_bw_weights(self.parameters.v2x.bandwidth,
                                                     self.param_system.bandwidth,
-                                                    37*8)
+                                                    6*8)  # to change for variable related to # streets and #v per street
 
                 rx_interference += np.sum(weights*np.power(10, 0.1*interference)) / 10**(acs/10.)
 
@@ -262,7 +262,7 @@ class SimulationDownlink(Simulation):
                 self.results.system_v2x_antenna_gain.extend(self.system_v2x_antenna_gain[0,v])
                 self.results.v2x_system_antenna_gain.extend(self.v2x_system_antenna_gain[0,v])
             else:
-                active_beams = [i for i in range(rsu*37*8, (rsu+1)*37*8)]
+                active_beams = [i for i in range(rsu*6*8, (rsu+1)*6*8)]  # to change for variable related to # streets and #v per street
                 self.results.system_v2x_antenna_gain.extend(self.system_v2x_antenna_gain[0,active_beams])
                 self.results.v2x_system_antenna_gain.extend(self.v2x_system_antenna_gain[0,active_beams])
 
