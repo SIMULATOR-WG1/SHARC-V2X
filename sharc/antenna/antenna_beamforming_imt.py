@@ -338,9 +338,9 @@ class PlotAntennaPattern(object):
         ax2.set_ylim(top_y_lim - 60,top_y_lim)
 
         if sta_type == "BS":
-            file_name = self.figs_dir + "bs_"
+            file_name = self.figs_dir + "rsu_"
         elif sta_type == "UE":
-            file_name = self.figs_dir + "ue_"
+            file_name = self.figs_dir + "v_"
 
         if antenna_type == "TX":
             file_name = file_name + "tx_"
@@ -359,44 +359,44 @@ if __name__ == '__main__':
 
     figs_dir = "figs/"
 
-    param = ParametersAntennaImt()
+    param = ParametersAntennaV2x()
 
-    param.bs_element_pattern = "M2101"
-    param.bs_tx_element_max_g    = 5
-    param.bs_tx_element_phi_deg_3db  = 65
-    param.bs_tx_element_theta_deg_3db = 65
-    param.bs_tx_element_am       = 30
-    param.bs_tx_element_sla_v    = 30
-    param.bs_tx_n_rows           = 8
-    param.bs_tx_n_columns        = 8
-    param.bs_tx_element_horiz_spacing = 0.5
-    param.bs_tx_element_vert_spacing = 0.5
-    param.bs_downtilt_deg = 0
+    param.rsu_element_pattern = "FIXED"
+    param.rsu_tx_element_max_g    = 5
+    param.rsu_tx_element_phi_deg_3db  = 65
+    param.rsu_tx_element_theta_deg_3db = 65
+    param.rsu_tx_element_am       = 30
+    param.rsu_tx_element_sla_v    = 30
+    param.rsu_tx_n_rows           = 8
+    param.rsu_tx_n_columns        = 8
+    param.rsu_tx_element_horiz_spacing = 0.5
+    param.rsu_tx_element_vert_spacing = 0.5
+    param.rsu_downtilt_deg = 0
 
-    param.ue_element_pattern = "M2101"
-    param.ue_tx_element_max_g    = 5
-    param.ue_tx_element_phi_deg_3db  = 90
-    param.ue_tx_element_theta_deg_3db = 90
-    param.ue_tx_element_am       = 25
-    param.ue_tx_element_sla_v    = 25
-    param.ue_tx_n_rows           = 4
-    param.ue_tx_n_columns        = 4
-    param.ue_tx_element_horiz_spacing = 0.5
-    param.ue_tx_element_vert_spacing = 0.5
+    param.v_element_pattern = "FIXED"
+    param.v_tx_element_max_g    = 5
+    param.v_tx_element_phi_deg_3db  = 90
+    param.v_tx_element_theta_deg_3db = 90
+    param.v_tx_element_am       = 25
+    param.v_tx_element_sla_v    = 25
+    param.v_tx_n_rows           = 4
+    param.v_tx_n_columns        = 4
+    param.v_tx_element_horiz_spacing = 0.5
+    param.v_tx_element_vert_spacing = 0.5
 
 
     plot = PlotAntennaPattern(figs_dir)
 
     # Plot BS TX radiation patterns
-    par = param.get_antenna_parameters("BS","TX")
-    bs_array = AntennaBeamformingImt(par,0,0)
-    plot.plot_element_pattern(bs_array,"BS","TX","ELEMENT")
-    plot.plot_element_pattern(bs_array,"BS","TX","ARRAY")
+    par = param.get_antenna_parameters("V2X_I","TX")
+    rsu_array = AntennaBeamformingImt(par,0,0)
+    plot.plot_element_pattern(rsu_array,"BS","TX","ELEMENT")
+    plot.plot_element_pattern(rsu_array,"BS","TX","ARRAY")
 
     # Plot UE TX radiation patterns
-    par = param.get_antenna_parameters("UE","TX")
-    ue_array = AntennaBeamformingImt(par,0,0)
-    plot.plot_element_pattern(ue_array,"UE","TX","ELEMENT")
-    plot.plot_element_pattern(ue_array,"UE","TX","ARRAY")
+    par = param.get_antenna_parameters("V2X_V","TX")
+    v_array = AntennaBeamformingImt(par,0,0)
+    plot.plot_element_pattern(v_array,"UE","TX","ELEMENT")
+    plot.plot_element_pattern(v_array,"UE","TX","ARRAY")
 
     print('END')

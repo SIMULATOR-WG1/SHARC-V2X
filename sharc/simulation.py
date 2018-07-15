@@ -112,7 +112,7 @@ class Simulation(ABC, Observable):
 
         self.topology.calculate_coordinates()
         num_rsu = self.topology.n_rows*self.topology.n_colums
-        num_v = num_rsu*6*8   # to change for variable related to # streets and #v per street
+        num_v = num_rsu*self.parameters.v2i.v_per_street_grid_ref*8   # 8 is the number of streets per ref. grid
 
         self.rsu_power_gain = 10*math.log10(self.parameters.antenna_v2x.rsu_tx_n_rows*
                                            self.parameters.antenna_v2x.rsu_tx_n_columns)
@@ -194,13 +194,13 @@ class Simulation(ABC, Observable):
                 # define antenna gains
                 gain_a = self.calculate_gains(station_a, station_b)
                 gain_b = np.transpose(self.calculate_gains(station_b, station_a, c_channel))
-                sectors_in_node=6*8 # to change for variable related to # streets and #v per street
+                sectors_in_node=self.parameters.v2i.v_per_street_grid_ref*8 # 8 is the number of streets per ref. grid
 
             else:
                 # define antenna gains
-                gain_a = np.repeat(self.calculate_gains(station_a, station_b), 6*8, 1) # to change for variable related to # streets and #v per street
+                gain_a = np.repeat(self.calculate_gains(station_a, station_b), self.parameters.v2i.v_per_street_grid_ref*8, 1) # 8 is the number of streets per ref. grid
                 gain_b = np.transpose(self.calculate_gains(station_b, station_a, c_channel))
-                sectors_in_node = 6*8 # to change for variable related to # streets and #v per street
+                sectors_in_node = self.parameters.v2i.v_per_street_grid_ref*8 # 8 is the number of streets per ref. grid
 
             if self.parameters.v2x.interfered_with:
                 earth_to_space = False
@@ -240,12 +240,15 @@ class Simulation(ABC, Observable):
             # define antenna gains
             gain_a = self.calculate_gains(station_a, station_b)
             gain_b = np.transpose(self.calculate_gains(station_b, station_a))
-
+            if math.isnan(np.max(gain_b)):
+                teste = 0
+                
+            gain_b = np.transpose(self.calculate_gains(station_b, station_a))
             # collect V2X RSU and V antenna gain samples
             self.path_loss_v2x = path_loss
             self.v2x_rsu_antenna_gain = gain_a
             self.v2x_v_antenna_gain = gain_b
-
+            
         # calculate coupling loss
         coupling_loss = np.squeeze(path_loss - gain_a - gain_b)
 
@@ -255,7 +258,7 @@ class Simulation(ABC, Observable):
         """
         Link the Veicles to the serving RSU. 
         """
-        num_v_per_rsu = 6*8 # to change for variable related to # streets and #v per street
+        num_v_per_rsu = self.parameters.v2i.v_per_street_grid_ref*8 # 8 is the number of streets per ref. grid
         rsu_active = np.where(self.rsu.active)[0]
         for rsu in rsu_active:
             v_list = [i for i in range(rsu*num_v_per_rsu, rsu*num_v_per_rsu + num_v_per_rsu)]
@@ -273,7 +276,7 @@ class Simulation(ABC, Observable):
         for rsu in rsu_active:
             # select K Veicles among the ones that are connected to RSU
             random_number_gen.shuffle(self.link[rsu])
-            K = 6*8  # to change for variable related to # streets and #v per street
+            K = self.parameters.v2i.v_per_street_grid_ref*8  # 8 is the number of streets per ref. grid
             del self.link[rsu][K:]
             # Activate the selected Veicles and create beams
             if self.rsu.active[rsu]:
@@ -323,9 +326,9 @@ class Simulation(ABC, Observable):
                  station_2.station_type is StationType.FS or \
                  station_2.station_type is StationType.RNS or \
                  station_2.station_type is StationType.RAS):
-                phi = np.repeat(phi,6*8,0)  # to change for variable related to # streets and #v per street
-                theta = np.repeat(theta,6*8,0) # to change for variable related to # streets and #v per street
-                beams_idx = np.tile(np.arange(6*8),self.rsu.num_stations) # to change for variable related to # streets and #v per street
+                phi = np.repeat(phi,self.parameters.v2i.v_per_street_grid_ref*8,0)  # 8 is the number of streets per ref. grid
+                theta = np.repeat(theta,self.parameters.v2i.v_per_street_grid_ref*8,0) # 8 is the number of streets per ref. grid
+                beams_idx = np.tile(np.arange(self.parameters.v2i.v_per_street_grid_ref*8),self.rsu.num_stations) # 8 is the number of streets per ref. grid
 
         elif(station_1.station_type is StationType.V2X_V):
             beams_idx = np.zeros(len(station_2_active),dtype=int)
@@ -347,7 +350,7 @@ class Simulation(ABC, Observable):
            (station_1.station_type is StationType.V2X_I and station_2.station_type is StationType.RNS) or \
            (station_1.station_type is StationType.V2X_I and station_2.station_type is StationType.RAS):
             for k in station_1_active:
-                for b in range(k*6*8,(k+1)*6*8): # to change for variable related to # streets and #v per street
+                for b in range(k*self.parameters.v2i.v_per_street_grid_ref*8,(k+1)*self.parameters.v2i.v_per_street_grid_ref*8): # 8 is the number of streets per ref. grid
                     gains[b,station_2_active] = station_1.antenna[k].calculate_gain(phi_vec=phi[b,station_2_active],
                                                                             theta_vec=theta[b,station_2_active],
                                                                             beams_l=np.array([beams_idx[b]]),
@@ -380,12 +383,11 @@ class Simulation(ABC, Observable):
             theta = np.degrees(np.arctan((station_1.height - station_2.height)/distance)) + station_1.elevation
             gains[0,station_2_active] = station_1.antenna[0].calculate_gain(off_axis_angle_vec=off_axis_angle[0,station_2_active],
                                                                             theta_vec=theta[0,station_2_active])
-        else: # for V2V <-> V2V
+        else: # for V2V <-> V2I
             for k in station_1_active:
                 gains[k,station_2_active] = station_1.antenna[k].calculate_gain(phi_vec=phi[k,station_2_active],
                                                                             theta_vec=theta[k,station_2_active],
                                                                             beams_l=beams_idx)
-
         return gains
 
     def calculate_v2x_tput(self,
@@ -432,7 +434,7 @@ class Simulation(ABC, Observable):
         elif bw_v2x > bw_sys:
             weights = np.zeros(ue_k)
 
-            bw_per_rbg = bw_v2x / (6*8)  # to change for variable related to # streets and #v per street
+            bw_per_rbg = bw_v2x / (self.parameters.v2i.v_per_street_grid_ref*8)  # 8 is the number of streets per ref. grid
 
             # number of resource block groups that will have weight equal to 1
             rb_ones = math.floor( bw_sys / bw_per_rbg )

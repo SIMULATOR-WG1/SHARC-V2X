@@ -47,7 +47,7 @@ class TopologyV2i(Topology):
         
         self.n_rows = param.n_rows
         self.n_colums = param.n_colums
-        self.street_width = param.street_width        
+        self.street_width = param.street_width    
         
         
     def calculate_coordinates(self, random_number_gen=np.random.RandomState()):
@@ -105,8 +105,8 @@ class TopologyV2i(Topology):
 if __name__ == '__main__':
     param = ParametersV2i()
     param.intersite_distance = 680
-    param.n_rows = 1        
-    param.n_colums = 1
+    param.n_rows = 10        
+    param.n_colums = 10
     param.street_width = 14
     topology = TopologyV2i(param)
     topology.calculate_coordinates()

@@ -50,7 +50,8 @@ class StationFactory(object):
     def generate_v2x_base_stations(param: ParametersV2x,
                                    param_ant: ParametersAntennaV2x,
                                    topology: Topology,
-                                   random_number_gen: np.random.RandomState):
+                                   random_number_gen: np.random.RandomState,
+                                   paramv2i: ParametersV2i):
         num_rsu = topology.num_rsu
         v2x_rsu = StationManager(num_rsu)
         v2x_rsu.station_type = StationType.V2X_I
@@ -63,15 +64,15 @@ class StationFactory(object):
 
         v2x_rsu.active = random_number_gen.rand(num_rsu) < param.rsu_load_probability
         v2x_rsu.tx_power = param.rsu_conducted_power*np.ones(num_rsu)
-        v2x_rsu.rx_power = dict([(rsu, -500 * np.ones(6*8)) for rsu in range(num_rsu)])  # to change for variable related to # streets and #v per street
-        v2x_rsu.rx_interference = dict([(rsu, -500 * np.ones(6*8)) for rsu in range(num_rsu)]) # to change for variable related to # streets and #v per street
-        v2x_rsu.ext_interference = dict([(rsu, -500 * np.ones(6*8)) for rsu in range(num_rsu)]) # to change for variable related to # streets and #v per street
-        v2x_rsu.total_interference = dict([(rsu, -500 * np.ones(6*8)) for rsu in range(num_rsu)]) # to change for variable related to # streets and #v per street
+        v2x_rsu.rx_power = dict([(rsu, -500 * np.ones(paramv2i.v_per_street_grid_ref*8)) for rsu in range(num_rsu)])  # 8 is the number of streets per ref. grid
+        v2x_rsu.rx_interference = dict([(rsu, -500 * np.ones(paramv2i.v_per_street_grid_ref*8)) for rsu in range(num_rsu)]) # 8 is the number of streets per ref. grid
+        v2x_rsu.ext_interference = dict([(rsu, -500 * np.ones(paramv2i.v_per_street_grid_ref*8)) for rsu in range(num_rsu)]) # 8 is the number of streets per ref. grid
+        v2x_rsu.total_interference = dict([(rsu, -500 * np.ones(paramv2i.v_per_street_grid_ref*8)) for rsu in range(num_rsu)]) # 8 is the number of streets per ref. grid
 
-        v2x_rsu.snr = dict([(rsu, -500 * np.ones(6*8)) for rsu in range(num_rsu)])  # to change for variable related to # streets and #v per street
-        v2x_rsu.sinr = dict([(rsu, -500 * np.ones(6*8)) for rsu in range(num_rsu)]) # to change for variable related to # streets and #v per street
-        v2x_rsu.sinr_ext = dict([(rsu, -500 * np.ones(6*8)) for rsu in range(num_rsu)])  # to change for variable related to # streets and #v per street
-        v2x_rsu.inr = dict([(rsu, -500 * np.ones(6*8)) for rsu in range(num_rsu)])  # to change for variable related to # streets and #v per street
+        v2x_rsu.snr = dict([(rsu, -500 * np.ones(paramv2i.v_per_street_grid_ref*8)) for rsu in range(num_rsu)])  # 8 is the number of streets per ref. grid
+        v2x_rsu.sinr = dict([(rsu, -500 * np.ones(paramv2i.v_per_street_grid_ref*8)) for rsu in range(num_rsu)]) # 8 is the number of streets per ref. grid
+        v2x_rsu.sinr_ext = dict([(rsu, -500 * np.ones(paramv2i.v_per_street_grid_ref*8)) for rsu in range(num_rsu)])  # 8 is the number of streets per ref. grid
+        v2x_rsu.inr = dict([(rsu, -500 * np.ones(paramv2i.v_per_street_grid_ref*8)) for rsu in range(num_rsu)])  # 8 is the number of streets per ref. grid
 
         v2x_rsu.antenna = np.empty(num_rsu, dtype=AntennaBeamformingImt)
         par = param_ant.get_antenna_parameters("V2X_I", "RX")
@@ -345,6 +346,7 @@ class StationFactory(object):
 
     @staticmethod
     def generate_v2i_v(param: ParametersV2x,
+                       paramv2i: ParametersV2i,
                        param_ant: ParametersAntennaV2x,
                        random_number_gen: np.random.RandomState,
                        topology: Topology) -> StationManager:
@@ -355,8 +357,7 @@ class StationFactory(object):
         rsu.active = np.zeros(num_rsu, dtype=bool)
         
         # According ETSI TR 102 681 veicle quantity for the 5x5 grid
-        num_v_per_street = 6   # represents 290 veicles per grid, for reference grid exist 8 streets 290/8=36.25
-        num_v = num_rsu*num_v_per_street*8
+        num_v = num_rsu*paramv2i.v_per_street_grid_ref*8
 
         v2i_v = StationManager(num_v)
         v2i_v.station_type = StationType.V2X_V
@@ -368,13 +369,13 @@ class StationFactory(object):
         # initially set all Veicles as outdoor
         v2i_v.v2i = np.ones(num_v, dtype=bool)
         
-        # Calculate UE pointing
-        azimuth_range = (-60, 60)
-        azimuth = (azimuth_range[1] - azimuth_range[0])*random_number_gen.random_sample(num_v) + azimuth_range[0]
+        # Calculate Veicle  pointing
+        #azimuth_range = (-90, 90)
+        azimuth = np.zeros(num_v) # (azimuth_range[1] - azimuth_range[0])*random_number_gen.random_sample(num_v) + azimuth_range[0]
         # Remove the randomness from azimuth and you will have a perfect pointing
         #azimuth = np.zeros(num_ue)
-        elevation_range = (-90, 90)
-        elevation = (elevation_range[1] - elevation_range[0])*random_number_gen.random_sample(num_v) + elevation_range[0]
+        #elevation_range = (-10, 10)
+        elevation = np.zeros(num_v) #(elevation_range[1] - elevation_range[0])*random_number_gen.random_sample(num_v) + elevation_range[0]
 
 
         # veicles inside streets for reference grid
@@ -401,26 +402,26 @@ class StationFactory(object):
             if y_max> 5 * topology.b_w + 4 * topology.street_width:
                 y_max = 5 * topology.b_w + 4 * topology.street_width
                 
-            x = (x_max - x_min)*random_number_gen.random_sample(num_v_per_street) + x_min                
-            y = (y_max - y_min)*random_number_gen.random_sample(num_v_per_street) + y_min
+            x = (x_max - x_min)*random_number_gen.random_sample(paramv2i.v_per_street_grid_ref) + x_min                
+            y = (y_max - y_min)*random_number_gen.random_sample(paramv2i.v_per_street_grid_ref) + y_min
             
             v_x.extend(x)
             v_y.extend(y)
         
         for rsu in range(num_rsu):
-            idx = [i for i in range(rsu*num_v_per_street, rsu*num_v_per_street + num_v_per_street)]
+            idx = [i for i in range(rsu*paramv2i.v_per_street_grid_ref*8, rsu*paramv2i.v_per_street_grid_ref*8 + paramv2i.v_per_street_grid_ref*8)]
             x2 = v_x + (topology.x[rsu] - topology.x[0])
             y2 = v_y + (topology.y[rsu] - topology.y[0])
             v_x2.extend(x2)
             v_y2.extend(y2)
-            # theta is the horizontal angle of the UE wrt the serving BS
-            theta = np.degrees(np.arctan2(y - topology.y[rsu], x - topology.x[rsu]))
-            # calculate UE azimuth wrt serving BS
+            # theta is the horizontal angle of the Veicle wrt the serving RSU
+            theta = np.degrees(np.arctan2(y2 - topology.y[rsu], x2 - topology.x[rsu]))
+            # calculate Veicle azimuth wrt serving RSU
             v2i_v.azimuth[idx] = (azimuth[idx] + theta + 180)%360
 
             # calculate elevation angle
-            # psi is the vertical angle of the UE wrt the serving BS
-            distance = np.sqrt((topology.x[rsu] - x)**2 + (topology.y[rsu] - y)**2)
+            # psi is the vertical angle of the Veicle wrt the serving RSU
+            distance = np.sqrt((topology.x[rsu] - x2)**2 + (topology.y[rsu] - y2)**2)
             psi = np.degrees(np.arctan((param.rsu_height - param.v_height)/distance))
             v2i_v.elevation[idx] = elevation[idx] + psi
 
@@ -802,6 +803,7 @@ if __name__ == '__main__':
 
     factory = StationFactory()
     param = ParametersV2x()
+    paramv2i = ParametersV2i()
     param.n_rows = 3
     param.n_colums = 2
     param.street_width = 14
@@ -810,6 +812,7 @@ if __name__ == '__main__':
     param.bandwidth = 10
     param.frequency = 5800
     param.v_noise_figure = 6
+    paramv2i.v_per_street_grid_ref = 1
     param.spectral_mask = 0
     topology = TopologyV2i(param)
     topology.calculate_coordinates()
@@ -853,7 +856,7 @@ if __name__ == '__main__':
     ant_param.v_tx_element_horiz_spacing = 0.5
     ant_param.v_tx_element_vert_spacing = 0.5
 
-    v2i_v = factory.generate_v2i_v(param, ant_param, random_number_gen, topology)
+    v2i_v = factory.generate_v2i_v(param, paramv2i, ant_param, random_number_gen, topology)
 
     fig = plt.figure(figsize=(8, 8), facecolor='w', edgecolor='k')  # create a figure object
     ax = fig.add_subplot(1, 1, 1)  # create an axes object in the figure

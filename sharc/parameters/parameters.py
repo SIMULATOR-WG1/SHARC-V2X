@@ -151,6 +151,7 @@ class Parameters(object):
         #######################################################################
         self.v2i.n_rows = config.getint("V2I", "n_rows")
         self.v2i.n_colums = config.getint("V2I", "n_colums")
+        self.v2i.v_per_street_grid_ref = config.getint("V2I", "v_per_street_grid_ref")
         self.v2i.street_width = config.getint("V2I", "street_width")
 
         #######################################################################
