@@ -55,7 +55,7 @@ class SimulationUplink(Simulation):
                                                self.parameters.v2i,
                                                self.parameters.antenna_v2x,random_number_gen,
                                                self.topology)
-        self.plot_scenario()
+        #self.plot_scenario()
 
         self.connect_v_to_rsu()
         self.select_v(random_number_gen)

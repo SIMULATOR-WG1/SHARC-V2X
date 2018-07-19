@@ -550,16 +550,16 @@ class StationFactory(object):
             fss_earth_station.y = np.array([param.y])
         elif param.location.upper() == "CELL":
             x, y, dummy1, dummy2 = StationFactory.get_random_position(1, topology, random_number_gen,
-                                                                      param.min_dist_to_bs, True)
+                                                                      param.min_dist_to_rsu, True)
             fss_earth_station.x = np.array(x)
             fss_earth_station.y = np.array(y)
         elif param.location.upper() == "NETWORK":
             x, y, dummy1, dummy2 = StationFactory.get_random_position(1, topology, random_number_gen,
-                                                                      param.min_dist_to_bs, False)
+                                                                      param.min_dist_to_rsu, False)
             fss_earth_station.x = np.array(x)
             fss_earth_station.y = np.array(y)
         elif param.location.upper() == "UNIFORM_DIST":
-            dist = random_number_gen.uniform( param.min_dist_to_bs, param.max_dist_to_bs)
+            dist = random_number_gen.uniform( param.min_dist_to_rsu, param.max_dist_to_rsu)
             angle = random_number_gen.uniform(-np.pi, np.pi)
             fss_earth_station.x[0] = np.array(dist * np.cos(angle))
             fss_earth_station.y[0] = np.array(dist * np.sin(angle))
@@ -741,7 +741,7 @@ class StationFactory(object):
     @staticmethod
     def get_random_position( num_stas: int, topology: Topology,
                              random_number_gen: np.random.RandomState,
-                             min_dist_to_bs = 0, central_cell = False ):
+                             min_dist_to_rsu = 0, central_cell = False ):
         hexagon_radius = topology.intersite_distance / 3
 
         min_dist_ok = False
@@ -755,7 +755,7 @@ class StationFactory(object):
             y[invert_index] = -(hexagon_radius / 2 - y[invert_index])
             x[invert_index] = (hexagon_radius * np.cos(np.pi / 6) - x[invert_index])
 
-            if any (np.sqrt(x**2 + y**2) <  min_dist_to_bs):
+            if any (np.sqrt(x**2 + y**2) <  min_dist_to_rsu):
                 min_dist_ok = False
             else:
                 min_dist_ok = True
