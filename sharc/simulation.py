@@ -194,7 +194,7 @@ class Simulation(ABC, Observable):
                 # define antenna gains
                 gain_a = self.calculate_gains(station_a, station_b)
                 gain_b = np.transpose(self.calculate_gains(station_b, station_a, c_channel))
-                sectors_in_node=self.parameters.v2i.v_per_street_grid_ref*8 # 8 is the number of streets per ref. grid
+                sectors_in_node=1
 
             else:
                 # define antenna gains
@@ -240,8 +240,6 @@ class Simulation(ABC, Observable):
             # define antenna gains
             gain_a = self.calculate_gains(station_a, station_b)
             gain_b = np.transpose(self.calculate_gains(station_b, station_a))
-            if math.isnan(np.max(gain_b)):
-                teste = 0
                 
             gain_b = np.transpose(self.calculate_gains(station_b, station_a))
             # collect V2X RSU and V antenna gain samples
@@ -456,14 +454,14 @@ class Simulation(ABC, Observable):
         self.topology.plot(ax)
 
         # Plot user equipments
-        ax.scatter(self.ue.x, self.ue.y, color='r', edgecolor="w", linewidth=0.5, label="UE")
+        ax.scatter(self.v.x, self.v.y, color='r', edgecolor="w", linewidth=0.5, label="Veicles")
 
         # Plot UE's azimuth
         d = 0.1 * self.topology.cell_radius
-        for i in range(len(self.ue.x)):
-            plt.plot([self.ue.x[i], self.ue.x[i] + d*math.cos(math.radians(self.ue.azimuth[i]))],
-                     [self.ue.y[i], self.ue.y[i] + d*math.sin(math.radians(self.ue.azimuth[i]))],
-                     'r-')
+#        for i in range(len(self.v.x)):
+#            plt.plot([self.v.x[i], self.v.x[i] + d*math.cos(math.radians(self.v.azimuth[i]))],
+#                     [self.v.y[i], self.v.y[i] + d*math.sin(math.radians(self.v.azimuth[i]))],
+#                     'r-')
 
         plt.axis('image')
         plt.title("Simulation scenario")

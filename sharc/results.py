@@ -80,7 +80,7 @@ class Results(object):
             y = cumulative / cumulative[-1]
             x_label = "Antenna gain [dBi]"
             y_label = "Probability of antenna gain < $X$"
-            title = "[SYS] CDF of system antenna gain towards IMT stations"
+            title = "[SYS] CDF of system antenna gain towards V2X stations"
             file_name = title
             #x_limits = (0, 25)
             y_limits = (0, 1)
@@ -92,7 +92,7 @@ class Results(object):
             y = cumulative / cumulative[-1]
             x_label = "Antenna gain [dBi]"
             y_label = "Probability of antenna gain < $X$"
-            title = "[IMT] CDF of IMT station antenna gain towards system"
+            title = "[V2X] CDF of V2X station antenna gain towards system"
             file_name = title
             #x_limits = (0, 25)
             y_limits = (0, 1)
@@ -104,7 +104,7 @@ class Results(object):
             y = cumulative / cumulative[-1]
             x_label = "Antenna gain [dBi]"
             y_label = "Probability of antenna gain < $X$"
-            title = "[IMT] CDF of BS antenna gain towards the UE"
+            title = "[V2X] CDF of RSU antenna gain towards the UE"
             file_name = title
             x_limits = (0, 25)
             y_limits = (0, 1)
@@ -116,7 +116,7 @@ class Results(object):
             y = cumulative / cumulative[-1]
             x_label = "Antenna gain [dBi]"
             y_label = "Probability of antenna gain < $X$"
-            title = "[IMT] CDF of UE antenna gain towards the BS"
+            title = "[V2X] CDF of Veicle antenna gain towards the RSU"
             file_name = title
             x_limits = (0, 25)
             y_limits = (0, 1)
@@ -128,7 +128,7 @@ class Results(object):
             y = cumulative / cumulative[-1]
             x_label = "Transmit power density [dBm/Hz]"
             y_label = "Probability of transmit power density < $X$"
-            title = "[IMT] CDF of UE transmit power density"
+            title = "[V2X] CDF of Veicle transmit power density"
             file_name = title
             y_limits = (0, 1)
             self.plot_list.append(Plot(x, y, x_label, y_label, title, file_name, y_lim=y_limits))
@@ -139,7 +139,7 @@ class Results(object):
             y = cumulative / cumulative[-1]
             x_label = "Transmit power [dBm]"
             y_label = "Probability of transmit power < $X$"
-            title = "[IMT] CDF of UE transmit power"
+            title = "[V2X] CDF of Veicle transmit power"
             file_name = title
             x_limits = (-40, 30)
             y_limits = (0, 1)
@@ -151,7 +151,7 @@ class Results(object):
             y = cumulative / cumulative[-1]
             x_label = "SINR [dB]"
             y_label = "Probability of SINR < $X$"
-            title = "[IMT] CDF of UL SINR with external interference"
+            title = "[V2X] CDF of UL SINR with external interference"
             file_name = title
             x_limits = (-15, 20)
             y_limits = (0, 1)
@@ -163,7 +163,7 @@ class Results(object):
             y = cumulative / cumulative[-1]
             x_label = "SINR [dB]"
             y_label = "Probability of SINR < $X$"
-            title = "[IMT] CDF of UL SINR"
+            title = "[V2X] CDF of UL SINR"
             file_name = title
             x_limits = (-15, 20)
             y_limits = (0, 1)
@@ -173,7 +173,7 @@ class Results(object):
             cumulative = np.cumsum(values)
             x = base[:-1]
             y = cumulative / cumulative[-1]
-            title = "[IMT] CDF of UL SNR"
+            title = "[V2X] CDF of UL SNR"
             x_label = "SNR [dB]"
             y_label = "Probability of SNR < $X$"
             file_name = title
@@ -185,7 +185,7 @@ class Results(object):
             cumulative = np.cumsum(values)
             x = base[:-1]
             y = cumulative / cumulative[-1]
-            title = "[IMT] CDF of UL interference-to-noise ratio"
+            title = "[V2X] CDF of UL interference-to-noise ratio"
             x_label = "$I/N$ [dB]"
             y_label = "Probability of $I/N$ < $X$"
             file_name = title
@@ -197,7 +197,7 @@ class Results(object):
             cumulative = np.cumsum(values)
             x = base[:-1]
             y = cumulative / cumulative[-1]
-            title = "[IMT] CDF of UL throughput with external interference"
+            title = "[V2X] CDF of UL throughput with external interference"
             x_label = "Throughput [bits/s/Hz]"
             y_label = "Probability of UL throughput < $X$"
             file_name = title
@@ -208,7 +208,7 @@ class Results(object):
             cumulative = np.cumsum(values)
             x = base[:-1]
             y = cumulative / cumulative[-1]
-            title = "[IMT] CDF of UL throughput"
+            title = "[V2X] CDF of UL throughput"
             x_label = "Throughput [bits/s/Hz]"
             y_label = "Probability of UL throughput < $X$"
             file_name = title
@@ -219,7 +219,7 @@ class Results(object):
             cumulative = np.cumsum(values)
             x = base[:-1]
             y = cumulative / cumulative[-1]
-            title = "[IMT] CDF of path loss"
+            title = "[V2X] CDF of path loss"
             x_label = "Path loss [dB]"
             y_label = "Probability of path loss < $X$"
             file_name = title
@@ -231,7 +231,7 @@ class Results(object):
             cumulative = np.cumsum(values)
             x = base[:-1]
             y = cumulative / cumulative[-1]
-            title = "[IMT] CDF of coupling loss"
+            title = "[V2X] CDF of coupling loss"
             x_label = "Coupling loss [dB]"
             y_label = "Probability of coupling loss < $X$"
             file_name = title
@@ -245,7 +245,7 @@ class Results(object):
             y = cumulative / cumulative[-1]
             x_label = "Transmit power [dBm]"
             y_label = "Probability of transmit power < $X$"
-            title = "[IMT] CDF of DL transmit power"
+            title = "[V2X] CDF of DL transmit power"
             file_name = title
             y_limits = (0, 1)
             self.plot_list.append(Plot(x, y, x_label, y_label, title, file_name, y_lim=y_limits))
@@ -256,7 +256,7 @@ class Results(object):
             y = cumulative / cumulative[-1]
             x_label = "SINR [dB]"
             y_label = "Probability of SINR < $X$"
-            title = "[IMT] CDF of DL SINR with external interference"
+            title = "[V2X] CDF of DL SINR with external interference"
             file_name = title
             x_limits = (-20, 80)
             y_limits = (0, 1)
@@ -268,7 +268,7 @@ class Results(object):
             y = cumulative / cumulative[-1]
             x_label = "SINR [dB]"
             y_label = "Probability of SINR < $X$"
-            title = "[IMT] CDF of DL SINR"
+            title = "[V2X] CDF of DL SINR"
             file_name = title
             x_limits = (-20, 80)
             y_limits = (0, 1)
@@ -278,7 +278,7 @@ class Results(object):
             cumulative = np.cumsum(values)
             x = base[:-1]
             y = cumulative / cumulative[-1]
-            title = "[IMT] CDF of DL SNR"
+            title = "[V2X] CDF of DL SNR"
             x_label = "SNR [dB]"
             y_label = "Probability of SNR < $X$"
             file_name = title
@@ -290,7 +290,7 @@ class Results(object):
             cumulative = np.cumsum(values)
             x = base[:-1]
             y = cumulative / cumulative[-1]
-            title = "[IMT] CDF of DL interference-to-noise ratio"
+            title = "[V2X] CDF of DL interference-to-noise ratio"
             x_label = "$I/N$ [dB]"
             y_label = "Probability of $I/N$ < $X$"
             file_name = title
@@ -302,7 +302,7 @@ class Results(object):
             cumulative = np.cumsum(values)
             x = base[:-1]
             y = cumulative / cumulative[-1]
-            title = "[IMT] CDF of DL throughput with external interference"
+            title = "[V2X] CDF of DL throughput with external interference"
             x_label = "Throughput [bits/s/Hz]"
             y_label = "Probability of throughput < $X$"
             file_name = title
@@ -313,7 +313,7 @@ class Results(object):
             cumulative = np.cumsum(values)
             x = base[:-1]
             y = cumulative / cumulative[-1]
-            title = "[IMT] CDF of DL throughput"
+            title = "[V2X] CDF of DL throughput"
             x_label = "Throughput [bits/s/Hz]"
             y_label = "Probability of throughput < $X$"
             file_name = title
@@ -371,7 +371,7 @@ class Results(object):
             cumulative = np.cumsum(values)
             x = base[:-1]
             y = cumulative / cumulative[-1]
-            title = "[SYS] CDF of system interference power from IMT UL"
+            title = "[SYS] CDF of system interference power from V2X UL"
             x_label = "Interference Power [dBm]"
             y_label = "Probability of Power < $X$"
             file_name = title
@@ -383,7 +383,7 @@ class Results(object):
             cumulative = np.cumsum(values)
             x = base[:-1]
             y = cumulative / cumulative[-1]
-            title = "[SYS] CDF of system interference power from IMT DL"
+            title = "[SYS] CDF of system interference power from V2X DL"
             x_label = "Interference Power [dBm]"
             y_label = "Probability of Power < $X$"
             file_name = title

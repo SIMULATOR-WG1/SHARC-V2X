@@ -64,14 +64,14 @@ class TopologyV2i(Topology):
             y_base = np.array([ 0 ])
         
             #calculation of blocks corner coordinates for multiple basic grid 5x5                 
-            for r in range(5 * self.n_rows):
-                for c in range(5 * self.n_colums):
+            for r in range(5*self.n_rows):
+                for c in range(5*self.n_colums):
                     self.x_block = np.concatenate((self.x_block, x_base + r*(self.b_w + self.street_width)))
                     self.y_block = np.concatenate((self.y_block, y_base + c*(self.b_d + self.street_width)))
 
             x_bs = np.array([ 368 ])
             y_bs = np.array([ 300 -7 ])
-            #calculation of BS  coordinates for multiple basic grid 5x5                 
+            #calculation of RSU  coordinates for multiple basic grid 5x5                 
             for r in range(self.n_rows):
                 for c in range(self.n_colums):
                     self.x = np.concatenate((self.x, x_bs + r*5*(self.b_w + self.street_width)))
@@ -99,7 +99,7 @@ class TopologyV2i(Topology):
 
                      
         # Infrastructure base stations
-        ax.scatter(self.x, self.y, color='k', edgecolor="k", linewidth=2, label="Base station")
+        ax.scatter(self.x, self.y, color='k', edgecolor="k", linewidth=2, label="RSU")
 
 
 if __name__ == '__main__':
