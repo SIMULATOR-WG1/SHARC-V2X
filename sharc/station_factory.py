@@ -381,17 +381,17 @@ class StationFactory(object):
         # veicles inside streets for reference grid
         for b in range(8):  # Each block of reference grid 5x5
             
-            if b < 4:
+            if b < 4:   #vertical streets
                 x_min = topology.x[0] - topology.cell_radius
                 x_max = topology.x[0] + topology.cell_radius     
-                y_min = topology.y[0] + (b-1)*(topology.b_w + topology.street_width)  - topology.street_width/2
-                y_max = topology.y[0] + (b-1)*(topology.b_w + topology.street_width)  + topology.street_width/2
+                y_min = topology.y[0] + (b-1)*(topology.b_d + topology.street_width)  - topology.street_width/2
+                y_max = topology.y[0] + (b-1)*(topology.b_d + topology.street_width)  + topology.street_width/2
                                 
-            elif b >= 4:
+            elif b >= 4: #Horiontal streets
                 x_min = topology.x[0] + (-3/2 + b - 4)*(topology.b_w + topology.street_width)  - topology.street_width/2
                 x_max = topology.x[0] + (-3/2 + b - 4)*(topology.b_w + topology.street_width)  + topology.street_width/2           
                 y_min = topology.y[0] - topology.cell_radius
-                y_max = topology.y[0] + topology.cell_radius
+                y_max = topology.y[0] + topology.cell_radius 
                 
             if x_min<0:
                 x_min = 0
@@ -399,8 +399,8 @@ class StationFactory(object):
                 y_min =0
             if x_max> 5 * topology.b_w + 4 * topology.street_width:
                 x_max = 5 * topology.b_w + 4 * topology.street_width
-            if y_max> 5 * topology.b_w + 4 * topology.street_width:
-                y_max = 5 * topology.b_w + 4 * topology.street_width
+            if y_max> 5 * topology.b_d + 4 * topology.street_width:
+                y_max = 5 * topology.b_d + 4 * topology.street_width
                 
             x = (x_max - x_min)*random_number_gen.random_sample(paramv2i.v_per_street_grid_ref) + x_min                
             y = (y_max - y_min)*random_number_gen.random_sample(paramv2i.v_per_street_grid_ref) + y_min
@@ -806,13 +806,13 @@ if __name__ == '__main__':
     paramv2i = ParametersV2i()
     param.n_rows = 3
     param.n_colums = 2
-    param.street_width = 14
+    param.street_width = 50
     param.v_height = 1.5
     param.rsu_height = 6
     param.bandwidth = 10
     param.frequency = 5800
     param.v_noise_figure = 6
-    paramv2i.v_per_street_grid_ref = 1
+    paramv2i.v_per_street_grid_ref = 50
     param.spectral_mask = 0
     topology = TopologyV2i(param)
     topology.calculate_coordinates()
@@ -868,7 +868,7 @@ if __name__ == '__main__':
     plt.xlabel("x-coordinate [m]")
     plt.ylabel("y-coordinate [m]")
 
-    plt.plot(v2i_v.x, v2i_v.y, "*")
+    plt.plot(v2i_v.x, v2i_v.y, ".")
 
     plt.tight_layout()
     plt.show()

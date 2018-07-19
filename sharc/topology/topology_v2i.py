@@ -69,8 +69,10 @@ class TopologyV2i(Topology):
                     self.x_block = np.concatenate((self.x_block, x_base + r*(self.b_w + self.street_width)))
                     self.y_block = np.concatenate((self.y_block, y_base + c*(self.b_d + self.street_width)))
 
-            x_bs = np.array([ 368 ])
-            y_bs = np.array([ 300 -7 ])
+            pos_x_rsu = self.b_w*2.5 + 2*self.street_width
+            pos_y_rsu = self.b_d*2 + 3/2*self.street_width 
+            x_bs = np.array([ pos_x_rsu ])
+            y_bs = np.array([ pos_y_rsu ])
             #calculation of RSU  coordinates for multiple basic grid 5x5                 
             for r in range(self.n_rows):
                 for c in range(self.n_colums):
@@ -105,8 +107,8 @@ class TopologyV2i(Topology):
 if __name__ == '__main__':
     param = ParametersV2i()
     param.intersite_distance = 680
-    param.n_rows = 10        
-    param.n_colums = 10
+    param.n_rows = 1       
+    param.n_colums = 1
     param.street_width = 14
     topology = TopologyV2i(param)
     topology.calculate_coordinates()

@@ -388,7 +388,7 @@ class Simulation(ABC, Observable):
                                                                             beams_l=beams_idx)
         return gains
 
-    def calculate_v2x_tput(self,
+    def calculate_v2x_tput (self,
                            sinr: np.array,
                            sinr_min: float,
                            sinr_max: float,
