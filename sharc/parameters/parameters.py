@@ -11,6 +11,7 @@ import configparser
 from sharc.parameters.parameters_general import ParametersGeneral
 from sharc.parameters.parameters_v2x import ParametersV2x
 from sharc.parameters.parameters_v2i import ParametersV2i
+from sharc.parameters.parameters_v2iroad import ParametersV2iroad
 from sharc.parameters.parameters_antenna_v2x import ParametersAntennaV2x
 from sharc.parameters.parameters_fs import ParametersFs
 from sharc.parameters.parameters_fss_ss import ParametersFssSs
@@ -32,6 +33,7 @@ class Parameters(object):
         self.v2x = ParametersV2x()
         self.antenna_v2x = ParametersAntennaV2x()
         self.v2i = ParametersV2i()
+        self.v2iroad = ParametersV2iroad()
         self.fs = ParametersFs()
         self.fss_ss = ParametersFssSs()
         self.fss_es = ParametersFssEs()
@@ -154,6 +156,14 @@ class Parameters(object):
         self.v2i.v_per_street_grid_ref = config.getint("V2I", "v_per_street_grid_ref")
         self.v2i.street_width = config.getint("V2I", "street_width")
 
+        #######################################################################
+        # V2I ROAD
+        #######################################################################
+        self.v2iroad.n_roads = config.getint("V2IROAD", "n_roads")
+        self.v2iroad.n_lines = config.getint("V2IROAD", "n_lines")
+        self.v2iroad.road_inclination = config.getint("V2IROAD", "road_inclination")
+        self.v2iroad.v_per_rsu = config.getint("V2IROAD", "v_per_rsu")
+        
         #######################################################################
         # FSS space station
         #######################################################################

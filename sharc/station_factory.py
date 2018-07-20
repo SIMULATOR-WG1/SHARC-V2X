@@ -15,6 +15,7 @@ from sharc.support.enumerations import StationType
 from sharc.parameters.parameters import Parameters
 from sharc.parameters.parameters_v2x import ParametersV2x
 from sharc.parameters.parameters_v2i import ParametersV2i
+from sharc.parameters.parameters_v2iroad import ParametersV2iroad
 from sharc.parameters.parameters_antenna_v2x import ParametersAntennaV2x
 from sharc.parameters.parameters_fs import ParametersFs
 from sharc.parameters.parameters_fss_ss import ParametersFssSs
@@ -345,6 +346,19 @@ class StationFactory(object):
 #        return imt_ue
 
     @staticmethod
+    def generate_v2x_v(param: ParametersV2x,
+                       paramv2i: ParametersV2i,
+                       paramv2iroad: ParametersV2iroad,
+                       param_ant: ParametersAntennaV2x,
+                       random_number_gen: np.random.RandomState,
+                       topology: Topology) -> StationManager:
+        
+        if param.topology == "V2I":
+            return StationFactory.generate_v2i_v(param, paramv2i, param_ant, random_number_gen, topology)
+        elif param.topology == "V2IROAD":
+            return StationFactory.generate_v2iroad_v(param, paramv2iroad, param_ant, random_number_gen, topology)
+
+    @staticmethod
     def generate_v2i_v(param: ParametersV2x,
                        paramv2i: ParametersV2i,
                        param_ant: ParametersAntennaV2x,
@@ -410,6 +424,103 @@ class StationFactory(object):
         
         for rsu in range(num_rsu):
             idx = [i for i in range(rsu*paramv2i.v_per_street_grid_ref*8, rsu*paramv2i.v_per_street_grid_ref*8 + paramv2i.v_per_street_grid_ref*8)]
+            x2 = v_x + (topology.x[rsu] - topology.x[0])
+            y2 = v_y + (topology.y[rsu] - topology.y[0])
+            v_x2.extend(x2)
+            v_y2.extend(y2)
+            # theta is the horizontal angle of the Veicle wrt the serving RSU
+            theta = np.degrees(np.arctan2(y2 - topology.y[rsu], x2 - topology.x[rsu]))
+            # calculate Veicle azimuth wrt serving RSU
+            v2i_v.azimuth[idx] = (azimuth[idx] + theta + 180)%360
+
+            # calculate elevation angle
+            # psi is the vertical angle of the Veicle wrt the serving RSU
+            distance = np.sqrt((topology.x[rsu] - x2)**2 + (topology.y[rsu] - y2)**2)
+            psi = np.degrees(np.arctan((param.rsu_height - param.v_height)/distance))
+            v2i_v.elevation[idx] = elevation[idx] + psi
+
+            
+        v2i_v.x = np.array(v_x2)
+        v2i_v.y = np.array(v_y2)
+        
+        v2i_v.active = np.zeros(num_v, dtype=bool)
+        v2i_v.height = param.v_height*np.ones(num_v)
+        v2i_v.rx_interference = -500*np.ones(num_v)
+        v2i_v.ext_interference = -500*np.ones(num_v)
+        # TODO: this piece of code works only for uplink
+        par = param_ant.get_antenna_parameters("V2X_V","TX")
+        for i in range(num_v):
+            v2i_v.antenna[i] = AntennaBeamformingImt(par, v2i_v.azimuth[i],
+                                                         v2i_v.elevation[i])
+
+        #imt_ue.antenna = [AntennaOmni(0) for bs in range(num_ue)]
+        v2i_v.bandwidth = param.bandwidth*np.ones(num_v)
+        v2i_v.center_freq = param.frequency*np.ones(num_v)
+        v2i_v.noise_figure = param.v_noise_figure*np.ones(num_v)
+
+        if param.spectral_mask == "ITU 265-E":
+            v2i_v.spectral_mask = SpectralMaskImt(StationType.V2X_V,param.frequency,\
+                                                   param.bandwidth,scenario = "V2I")
+
+        elif param.spectral_mask == "3GPP 36.104":
+            v2i_v.spectral_mask = SpectralMask3Gpp(StationType.V2X_V,param.frequency,\
+                                                   param.bandwidth)
+
+#        v2i_v.spectral_mask.set_mask()    
+        
+        return v2i_v
+
+    @staticmethod
+    def generate_v2iroad_v(param: ParametersV2x,
+                           paramv2iroad: ParametersV2iroad,
+                           param_ant: ParametersAntennaV2x,
+                           random_number_gen: np.random.RandomState,
+                           topology: Topology) -> StationManager:
+        
+        num_rsu = topology.num_rsu
+        
+        rsu = StationManager(num_rsu)
+        rsu.active = np.zeros(num_rsu, dtype=bool)
+        
+        num_v = num_rsu*paramv2iroad.v_per_rsu
+
+        v2i_v = StationManager(num_v)
+        v2i_v.station_type = StationType.V2X_V
+        v_x = list()
+        v_y = list()
+        v_x2 = list()
+        v_y2 = list()
+
+        # Set all Veicles as outdoor
+        v2i_v.v2i = np.ones(num_v, dtype=bool)
+        
+        # Calculate Veicle  pointing
+        #azimuth_range = (-90, 90)
+        azimuth = np.zeros(num_v) # (azimuth_range[1] - azimuth_range[0])*random_number_gen.random_sample(num_v) + azimuth_range[0]
+        # Remove the randomness from azimuth and you will have a perfect pointing
+        #azimuth = np.zeros(num_ue)
+        #elevation_range = (-10, 10)
+        elevation = np.zeros(num_v) #(elevation_range[1] - elevation_range[0])*random_number_gen.random_sample(num_v) + elevation_range[0]
+
+
+        # Rectangle of the first road of reference
+        x_min = topology.intersite_distance/2 - topology.cell_radius/2
+        x_max = topology.intersite_distance/2 + topology.cell_radius/2
+        y_min = 0  
+        y_max = topology.n_lines*topology.line_w
+                                
+        x = (x_max - x_min)*random_number_gen.random_sample(paramv2iroad.v_per_rsu) + x_min                
+        y = (y_max - y_min)*random_number_gen.random_sample(paramv2iroad.v_per_rsu) + y_min
+        
+        #Change of coordinates to inlcude veicles over inclined road
+        x_2 = x*math.cos(paramv2iroad.road_inclination*3.1415/180)
+        y_2 = x*math.sin(paramv2iroad.road_inclination*3.1415/180) + y       
+            
+        v_x.extend(x_2)
+        v_y.extend(y_2)
+        
+        for rsu in range(num_rsu):
+            idx = [i for i in range(rsu*paramv2iroad.v_per_rsu, rsu*paramv2iroad.v_per_rsu + paramv2iroad.v_per_rsu)]
             x2 = v_x + (topology.x[rsu] - topology.x[0])
             y2 = v_y + (topology.y[rsu] - topology.y[0])
             v_x2.extend(x2)
@@ -800,21 +911,95 @@ if __name__ == '__main__':
     from matplotlib import pyplot as plt
 
     # plot uniform distribution in macrocell scenario
-
+######## TEST FOR V2I ON REFERENCE GRID
+#    factory = StationFactory()
+#    param = ParametersV2x()
+#    paramv2i = ParametersV2i()
+#    param.n_rows = 3
+#    param.n_colums = 2
+#    param.street_width = 50
+#    param.v_height = 1.5
+#    param.rsu_height = 6
+#    param.bandwidth = 10
+#    param.frequency = 5800
+#    param.v_noise_figure = 6
+#    paramv2i.v_per_street_grid_ref = 50
+#    param.spectral_mask = 0
+#    topology = TopologyV2i(param)
+#    topology.calculate_coordinates()
+#    random_number_gen = np.random.RandomState()
+#
+#    class ParamsAux(object):
+#        def __init__(self):
+#            self.ue_distribution_type = "UNIFORM"
+#            self.bs_height = 30
+#            self.ue_height = 3
+#            self.ue_indoor_percent = 0
+#            self.ue_k = 3
+#            self.ue_k_m = 20
+#            self.bandwidth  = np.random.rand()
+#            self.ue_noise_figure = np.random.rand()
+#
+#    params = ParamsAux()
+#
+#    ant_param = ParametersAntennaV2x()
+#
+#    ant_param.rsu_element_pattern = "F1336"
+#    ant_param.rsu_tx_element_max_g = 5
+#    ant_param.rsu_tx_element_phi_deg_3db = 65
+#    ant_param.rsu_tx_element_theta_deg_3db = 65
+#    ant_param.rsu_tx_element_am = 30
+#    ant_param.rsu_tx_element_sla_v = 30
+#    ant_param.rsu_tx_n_rows = 8
+#    ant_param.rsu_tx_n_columns = 8
+#    ant_param.rsu_tx_element_horiz_spacing = 0.5
+#    ant_param.rsu_tx_element_vert_spacing = 0.5
+#    ant_param.rsu_downtilt_deg = 10
+#
+#    ant_param.v_element_pattern = "FIXED"
+#    ant_param.v_tx_element_max_g = 5
+#    ant_param.v_tx_element_phi_deg_3db = 90
+#    ant_param.v_tx_element_theta_deg_3db = 90
+#    ant_param.v_tx_element_am = 25
+#    ant_param.v_tx_element_sla_v = 25
+#    ant_param.v_tx_n_rows = 4
+#    ant_param.v_tx_n_columns = 4
+#    ant_param.v_tx_element_horiz_spacing = 0.5
+#    ant_param.v_tx_element_vert_spacing = 0.5
+#
+#    v2i_v = factory.generate_v2i_v(param, paramv2i, ant_param, random_number_gen, topology)
+#
+#    fig = plt.figure(figsize=(8, 8), facecolor='w', edgecolor='k')  # create a figure object
+#    ax = fig.add_subplot(1, 1, 1)  # create an axes object in the figure
+#
+#    topology.plot(ax)
+#
+#    plt.axis('image')
+#    plt.title("V2I topology")
+#    plt.xlabel("x-coordinate [m]")
+#    plt.ylabel("y-coordinate [m]")
+#
+#    plt.plot(v2i_v.x, v2i_v.y, ".")
+#
+#    plt.tight_layout()
+#    plt.show()
+    
+    
+    ######## TEST FOR V2I ON REFERENCE ROAD
     factory = StationFactory()
     param = ParametersV2x()
-    paramv2i = ParametersV2i()
-    param.n_rows = 3
-    param.n_colums = 2
-    param.street_width = 50
-    param.v_height = 1.5
+    paramv2iroad = ParametersV2iroad()
+    paramv2iroad.n_roads = 1
+    paramv2iroad.n_lines = 6
+    paramv2iroad.road_inclination = 50
+    paramv2iroad.v_per_rsu = 200
     param.rsu_height = 6
+    param.v_height = 1.5
     param.bandwidth = 10
     param.frequency = 5800
     param.v_noise_figure = 6
-    paramv2i.v_per_street_grid_ref = 50
     param.spectral_mask = 0
-    topology = TopologyV2i(param)
+    topology = TopologyV2iroad(paramv2iroad)
     topology.calculate_coordinates()
     random_number_gen = np.random.RandomState()
 
@@ -856,7 +1041,7 @@ if __name__ == '__main__':
     ant_param.v_tx_element_horiz_spacing = 0.5
     ant_param.v_tx_element_vert_spacing = 0.5
 
-    v2i_v = factory.generate_v2i_v(param, paramv2i, ant_param, random_number_gen, topology)
+    v2i_v = factory.generate_v2iroad_v(param, paramv2iroad, ant_param, random_number_gen, topology)
 
     fig = plt.figure(figsize=(8, 8), facecolor='w', edgecolor='k')  # create a figure object
     ax = fig.add_subplot(1, 1, 1)  # create an axes object in the figure
@@ -868,7 +1053,14 @@ if __name__ == '__main__':
     plt.xlabel("x-coordinate [m]")
     plt.ylabel("y-coordinate [m]")
 
+    axes = plt.gca()
+    x_min = 400#topology.intersite_distance/2-600
+    x_max = 1200#topology.intersite_distance/2+200
+    axes.set_xlim([x_min, x_max])
+    axes.set_ylim([400, 1200])
+    #axes.set_ylim([x_min*math.tan(param.road_inclination*3.1415/180), param.n_lines*topology.line_w+math.tan(param.road_inclination*3.1415/180)*x_max])
+    #axes.set_ylim([550, 850])
     plt.plot(v2i_v.x, v2i_v.y, ".")
 
-    plt.tight_layout()
+    #plt.tight_layout()
     plt.show()
