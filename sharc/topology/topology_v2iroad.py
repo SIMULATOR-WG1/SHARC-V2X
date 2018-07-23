@@ -108,8 +108,8 @@ if __name__ == '__main__':
     param = ParametersV2iroad()
     param.intersite_distance = 1732
     param.n_roads = 10    
-    param.n_lines = 6
-    param.road_inclination = 10
+    param.n_lines = 3
+    param.road_inclination = 50
     topology = TopologyV2iroad(param)
     topology.calculate_coordinates()
     
@@ -125,8 +125,8 @@ if __name__ == '__main__':
     plt.tight_layout()    
     
     axes = plt.gca()
-    x_min = topology.intersite_distance/2-100
-    x_max = topology.intersite_distance/2+100
+    x_min = 0
+    x_max = 10732
     axes.set_xlim([x_min, x_max])
     axes.set_ylim([x_min*math.tan(param.road_inclination*3.1415/180), param.n_lines*topology.line_w+math.tan(param.road_inclination*3.1415/180)*x_max+20])
     

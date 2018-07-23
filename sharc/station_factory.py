@@ -1055,12 +1055,13 @@ if __name__ == '__main__':
 
     axes = plt.gca()
     x_min = 400#topology.intersite_distance/2-600
-    x_max = 1200#topology.intersite_distance/2+200
+    x_max = 900#topology.intersite_distance/2+200
     axes.set_xlim([x_min, x_max])
-    axes.set_ylim([400, 1200])
+    axes.set_ylim([500, 1000])
     #axes.set_ylim([x_min*math.tan(param.road_inclination*3.1415/180), param.n_lines*topology.line_w+math.tan(param.road_inclination*3.1415/180)*x_max])
     #axes.set_ylim([550, 850])
-    plt.plot(v2i_v.x, v2i_v.y, ".")
+    plt.plot(v2i_v.x, v2i_v.y, ".",label = 'Veicles')
+    plt.legend()
 
-    #plt.tight_layout()
+    plt.tight_layout()
     plt.show()

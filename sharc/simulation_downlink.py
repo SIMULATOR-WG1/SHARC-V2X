@@ -51,7 +51,7 @@ class SimulationDownlink(Simulation):
         self.system = StationFactory.generate_system(self.parameters, self.topology, random_number_gen)
 
         # Create Veicles 
-        self.v = StationFactory.generate_v2i_v(self.parameters.v2x,
+        self.v = StationFactory.generate_v2x_v(self.parameters.v2x,
                                                self.parameters.v2i,
                                                self.parameters.v2iroad,
                                                self.parameters.antenna_v2x,random_number_gen,
