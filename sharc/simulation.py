@@ -111,7 +111,7 @@ class Simulation(ABC, Observable):
         """
 
         self.topology.calculate_coordinates()
-        num_rsu = self.topology.n_rows*self.topology.n_colums
+        num_rsu = self.topology.num_rsu
         num_v = num_rsu*self.parameters.v2i.v_per_street_grid_ref*8   # 8 is the number of streets per ref. grid
 
         self.rsu_power_gain = 10*math.log10(self.parameters.antenna_v2x.rsu_tx_n_rows*
@@ -141,7 +141,7 @@ class Simulation(ABC, Observable):
         self.num_rb_per_rsu = math.trunc((1-self.parameters.v2x.guard_band_ratio)* \
                             self.parameters.v2x.bandwidth /self.parameters.v2x.rb_bandwidth)
         # calculates the number of RB per Veicle on a given RSU
-        self.num_rb_per_v = math.trunc(self.num_rb_per_rsu*self.topology.n_rows*self.topology.n_colums/num_v)
+        self.num_rb_per_v = math.trunc(self.num_rb_per_rsu*self.topology.num_rsu/num_v)
 
         self.results = Results(self.parameters_filename, self.parameters.general.overwrite_output)
 
