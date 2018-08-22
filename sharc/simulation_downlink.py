@@ -93,13 +93,13 @@ class SimulationDownlink(Simulation):
         # divided among the selected Veicles
         total_power = self.parameters.v2x.rsu_conducted_power \
                       + self.rsu_power_gain
-        tx_power = total_power - 10 * math.log10(self.parameters.v2i.v_per_street_grid_ref*8)  # 8 is the number of streets per ref. grid
+        tx_power = total_power - 10 * math.log10(self.parameters.v2x.v_per_rsu)  
         # calculate transmit powers to have a structure such as
         # {rsu_1: [pwr_1, pwr_2,...], ...}, where rsu_1 is the RSU id,
         # pwr_1 is the transmit power from rsu_1 to v_1, pwr_2 is the transmit
         # power from rsu_1 to v_2, etc
         rsu_active = np.where(self.rsu.active)[0]
-        self.rsu.tx_power = dict([(rsu, tx_power*np.ones(self.parameters.v2i.v_per_street_grid_ref*8)) for rsu in rsu_active]) # 8 is the number of streets per ref. grid
+        self.rsu.tx_power = dict([(rsu, tx_power*np.ones(self.parameters.v2x.v_per_rsu)) for rsu in rsu_active]) 
 
         # Update the spectral mask
         if self.adjacent_channel:
@@ -189,7 +189,7 @@ class SimulationDownlink(Simulation):
         rsu_active = np.where(self.rsu.active)[0]
         for rsu in rsu_active:
 
-            active_beams = [i for i in range(rsu*self.parameters.v2i.v_per_street_grid_ref*8, (rsu+1)*self.parameters.v2i.v_per_street_grid_ref*8)] # 8 is the number of streets per ref. grid
+            active_beams = [i for i in range(rsu*self.parameters.v2x.v_per_rsu, (rsu+1)*self.parameters.v2x.v_per_rsu)]
 
             if self.co_channel:
                 if self.overlapping_bandwidth:
@@ -198,10 +198,10 @@ class SimulationDownlink(Simulation):
                     acs = self.param_system.adjacent_ch_selectivity
 
                 interference = self.rsu.tx_power[rsu] - self.parameters.v2x.rsu_ohmic_loss \
-                             - self.coupling_loss_v2x_system[active_beams]
+                             - self.coupling_loss_v2x_system[rsu]
                 weights = self.calculate_bw_weights(self.parameters.v2x.bandwidth,
                                                     self.param_system.bandwidth,
-                                                    self.parameters.v2i.v_per_street_grid_ref*8)  # 8 is the number of streets per ref. grid
+                                                    self.parameters.v2x.v_per_rsu)  
 
                 rx_interference += np.sum(weights*np.power(10, 0.1*interference)) / 10**(acs/10.)
 
@@ -264,7 +264,7 @@ class SimulationDownlink(Simulation):
                 self.results.system_v2x_antenna_gain.extend(self.system_v2x_antenna_gain[0,v])
                 self.results.v2x_system_antenna_gain.extend(self.v2x_system_antenna_gain[0,v])
             else:
-                active_beams = [i for i in range(rsu*self.parameters.v2i.v_per_street_grid_ref*8, (rsu+1)*self.parameters.v2i.v_per_street_grid_ref*8)]  # 8 is the number of streets per ref. grid
+                active_beams = [i for i in range(rsu*self.parameters.v2x.v_per_rsu, (rsu+1)*self.parameters.v2x.v_per_rsu)]  
                 self.results.system_v2x_antenna_gain.extend(self.system_v2x_antenna_gain[0,active_beams])
                 self.results.v2x_system_antenna_gain.extend(self.v2x_system_antenna_gain[0,active_beams])
 
