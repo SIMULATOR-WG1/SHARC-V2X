@@ -42,6 +42,7 @@ from sharc.antenna.antenna_beamforming_imt import AntennaBeamformingImt
 from sharc.topology.topology import Topology
 from sharc.topology.topology_macrocell import TopologyMacrocell
 from sharc.topology.topology_v2i import TopologyV2i
+from sharc.topology.topology_v2iroad import TopologyV2iroad
 from sharc.spectral_mask_3gpp import SpectralMask3Gpp
 
 
@@ -395,27 +396,19 @@ class StationFactory(object):
         # veicles inside streets for reference grid
         for b in range(8):  # Each block of reference grid 5x5
             
-            if b < 4:   #vertical streets
-                x_min = topology.x[0] - topology.cell_radius
-                x_max = topology.x[0] + topology.cell_radius     
+            if b < 4:   #Horizontal streets
                 y_min = topology.y[0] + (b-1)*(topology.b_d + topology.street_width)  - topology.street_width/2
                 y_max = topology.y[0] + (b-1)*(topology.b_d + topology.street_width)  + topology.street_width/2
+                x_min = topology.x[0] - topology.cell_radius+100
+                x_max = topology.x[0] + topology.cell_radius-100    
                                 
-            elif b >= 4: #Horiontal streets
+            elif b >= 4: #Vertical streets
                 x_min = topology.x[0] + (-3/2 + b - 4)*(topology.b_w + topology.street_width)  - topology.street_width/2
                 x_max = topology.x[0] + (-3/2 + b - 4)*(topology.b_w + topology.street_width)  + topology.street_width/2           
-                y_min = topology.y[0] - topology.cell_radius
+                y_min = topology.y[0] - topology.cell_radius+100
                 y_max = topology.y[0] + topology.cell_radius 
                 
-            if x_min<0:
-                x_min = 0
-            if y_min<0:
-                y_min =0
-            if x_max> 5 * topology.b_w + 4 * topology.street_width:
-                x_max = 5 * topology.b_w + 4 * topology.street_width
-            if y_max> 5 * topology.b_d + 4 * topology.street_width:
-                y_max = 5 * topology.b_d + 4 * topology.street_width
-                
+               
             x = (x_max - x_min)*random_number_gen.random_sample(paramv2i.v_per_street_grid_ref) + x_min                
             y = (y_max - y_min)*random_number_gen.random_sample(paramv2i.v_per_street_grid_ref) + y_min
             
@@ -504,8 +497,8 @@ class StationFactory(object):
 
 
         # Rectangle of the first road of reference
-        x_min = topology.intersite_distance/2 - topology.cell_radius/2
-        x_max = topology.intersite_distance/2 + topology.cell_radius/2
+        x_min =  - topology.cell_radius/2
+        x_max =  topology.cell_radius/2
         y_min = 0  
         y_max = topology.n_lines*topology.line_w
                                 
@@ -521,8 +514,8 @@ class StationFactory(object):
         
         for rsu in range(num_rsu):
             idx = [i for i in range(rsu*paramv2iroad.v_per_rsu, rsu*paramv2iroad.v_per_rsu + paramv2iroad.v_per_rsu)]
-            x2 = v_x + (topology.x[rsu] - topology.x[0])
-            y2 = v_y + (topology.y[rsu] - topology.y[0])
+            x2 = v_x + topology.x[rsu]
+            y2 = v_y + topology.y[rsu]-paramv2iroad.n_lines*paramv2iroad.line_w/2-35
             v_x2.extend(x2)
             v_y2.extend(y2)
             # theta is the horizontal angle of the Veicle wrt the serving RSU
@@ -915,17 +908,21 @@ if __name__ == '__main__':
 #    factory = StationFactory()
 #    param = ParametersV2x()
 #    paramv2i = ParametersV2i()
-#    param.n_rows = 3
-#    param.n_colums = 2
-#    param.street_width = 50
+#    param.n_rows = 1
+#    param.n_colums = 1
+#    param.street_width = 14
 #    param.v_height = 1.5
 #    param.rsu_height = 6
 #    param.bandwidth = 10
 #    param.frequency = 5800
 #    param.v_noise_figure = 6
-#    paramv2i.v_per_street_grid_ref = 50
+#    paramv2i.v_per_street_grid_ref = 4
 #    param.spectral_mask = 0
-#    topology = TopologyV2i(param)
+#    param.tam_cluster=1
+#    param.intersite_distance=5000
+#    param.num_clusters=1
+#    param.num_blocks_per_cell = 4
+#    topology = TopologyV2i(param, param.intersite_distance, param.num_clusters, param.tam_cluster)
 #    topology.calculate_coordinates()
 #    random_number_gen = np.random.RandomState()
 #
@@ -981,6 +978,11 @@ if __name__ == '__main__':
 #
 #    plt.plot(v2i_v.x, v2i_v.y, ".")
 #
+#    limit = 2000
+#    axes = plt.gca()
+#    axes.set_xlim([-limit, limit])
+#    axes.set_ylim([-limit, limit])
+#    
 #    plt.tight_layout()
 #    plt.show()
     
@@ -991,15 +993,21 @@ if __name__ == '__main__':
     paramv2iroad = ParametersV2iroad()
     paramv2iroad.n_roads = 1
     paramv2iroad.n_lines = 6
+    paramv2iroad.line_w = 4
     paramv2iroad.road_inclination = 50
-    paramv2iroad.v_per_rsu = 200
+    paramv2iroad.v_per_rsu = 50
+    paramv2iroad.num_roads_per_cell = 1
     param.rsu_height = 6
     param.v_height = 1.5
     param.bandwidth = 10
     param.frequency = 5800
     param.v_noise_figure = 6
     param.spectral_mask = 0
-    topology = TopologyV2iroad(paramv2iroad)
+    num_clusters = 1
+    intersite_distance = 4000
+    tam_cluster = 1
+    
+    topology = TopologyV2iroad(paramv2iroad, intersite_distance,num_clusters,tam_cluster)
     topology.calculate_coordinates()
     random_number_gen = np.random.RandomState()
 
@@ -1054,10 +1062,10 @@ if __name__ == '__main__':
     plt.ylabel("y-coordinate [m]")
 
     axes = plt.gca()
-    x_min = 400#topology.intersite_distance/2-600
-    x_max = 900#topology.intersite_distance/2+200
+    x_min = -10000#topology.intersite_distance/2-600
+    x_max = 10000#topology.intersite_distance/2+200
     axes.set_xlim([x_min, x_max])
-    axes.set_ylim([500, 1000])
+    axes.set_ylim([-10000, 10000])
     #axes.set_ylim([x_min*math.tan(param.road_inclination*3.1415/180), param.n_lines*topology.line_w+math.tan(param.road_inclination*3.1415/180)*x_max])
     #axes.set_ylim([550, 850])
     plt.plot(v2i_v.x, v2i_v.y, ".",label = 'Veicles')

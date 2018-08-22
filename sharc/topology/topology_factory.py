@@ -23,9 +23,9 @@ class TopologyFactory(object):
         if parameters.v2x.topology == "V2V":
             return TopologySingleBaseStation(parameters.imt.intersite_distance*2/3, parameters.imt.num_clusters)
         elif parameters.v2x.topology == "V2I":
-            return TopologyV2i(parameters.v2i)
+            return TopologyV2i(parameters.v2i, parameters.v2x.intersite_distance,parameters.v2x.num_clusters, parameters.v2x.tam_cluster)
         elif parameters.v2x.topology == "V2IROAD":
-            return TopologyV2iroad(parameters.v2iroad)
+            return TopologyV2iroad(parameters.v2iroad, parameters.v2x.intersite_distance,parameters.v2x.num_clusters,parameters.v2x.tam_cluster)
         else:
             sys.stderr.write("ERROR\nInvalid topology: " + parameters.imt.topology)
             sys.exit(1)            

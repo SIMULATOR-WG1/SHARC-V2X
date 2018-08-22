@@ -24,7 +24,7 @@ class TopologyMacrocell(Topology):
 
     ALLOWED_NUM_CLUSTERS = [1, 7]
 
-    def __init__(self, intersite_distance: float, num_clusters: int):
+    def __init__(self, intersite_distance: float, num_clusters: int, tam_cluster: int):
         """
         Constructor method that sets the parameters and already calls the
         calculation methods.
@@ -33,6 +33,7 @@ class TopologyMacrocell(Topology):
         ----------
             intersite_distance : Distance between two sites
             num_clusters : Number of clusters, should be 1 or 7
+            tam_cluster : Define if 1 only one macrocell or other number 19 cells
         """
         if num_clusters not in TopologyMacrocell.ALLOWED_NUM_CLUSTERS:
             error_message = "invalid number of clusters ({})".format(num_clusters)
@@ -41,6 +42,8 @@ class TopologyMacrocell(Topology):
         cell_radius = intersite_distance*2/3
         super().__init__(intersite_distance, cell_radius)
         self.num_clusters = num_clusters
+        self.tam_cluster = tam_cluster
+        
 
     def calculate_coordinates(self, random_number_gen=np.random.RandomState()):
         """
@@ -55,28 +58,39 @@ class TopologyMacrocell(Topology):
             d = self.intersite_distance
             h = (d/3)*math.sqrt(3)/2
 
-            # these are the coordinates of the central cluster
-            x_central = np.array([0, d, d/2, -d/2, -d, -d/2,
-                             d/2, 2*d, 3*d/2, d, 0, -d,
-                             -3*d/2, -2*d, -3*d/2, -d, 0, d, 3*d/2])
-            y_central = np.array([0, 0, 3*h, 3*h, 0, -3*h,
-                             -3*h, 0, 3*h, 6*h, 6*h, 6*h,
-                             3*h, 0, -3*h, -6*h, -6*h, -6*h, -3*h])
-            self.x = np.copy(x_central)
-            self.y = np.copy(y_central)
+             # condition if 1 macrocell sector only used
+            if self.tam_cluster == 1:               
+                # these are the coordinates of the central cluster
+                x_central = np.array([0])
+                y_central = np.array([0])
+                self.x = np.copy(x_central)
+                self.y = np.copy(y_central)
+                
+            #condition if 19 macrocell sites are considered
+            else:    
+                # these are the coordinates of the central cluster
+                x_central = np.array([0, d, d/2, -d/2, -d, -d/2,
+                                      d/2, 2*d, 3*d/2, d, 0, -d,
+                                      -3*d/2, -2*d, -3*d/2, -d, 0, d, 3*d/2])
+                y_central = np.array([0, 0, 3*h, 3*h, 0, -3*h,
+                                      -3*h, 0, 3*h, 6*h, 6*h, 6*h,
+                                      3*h, 0, -3*h, -6*h, -6*h, -6*h, -3*h])
+                self.x = np.copy(x_central)
+                self.y = np.copy(y_central)
+                # other clusters are calculated by shifting the central cluster
+                if self.num_clusters == 7:
+                    x_shift = np.array([7*d/2, -d/2, -4*d, -7*d/2, d/2, 4*d])
+                    y_shift = np.array([9*h, 15*h, 6*h, -9*h, -15*h, -6*h])
+                    for xs, ys in zip(x_shift, y_shift):
+                        self.x = np.concatenate((self.x, x_central + xs))
+                        self.y = np.concatenate((self.y, y_central + ys))
+                self.x = np.repeat(self.x, 3)
+                self.y = np.repeat(self.y, 3)
+                self.azimuth = np.tile(self.AZIMUTH, 19*self.num_clusters)
+                self.elevation = np.tile(self.ELEVATION, 3*19*self.num_clusters)
 
-            # other clusters are calculated by shifting the central cluster
-            if self.num_clusters == 7:
-                x_shift = np.array([7*d/2, -d/2, -4*d, -7*d/2, d/2, 4*d])
-                y_shift = np.array([9*h, 15*h, 6*h, -9*h, -15*h, -6*h])
-                for xs, ys in zip(x_shift, y_shift):
-                    self.x = np.concatenate((self.x, x_central + xs))
-                    self.y = np.concatenate((self.y, y_central + ys))
 
-            self.x = np.repeat(self.x, 3)
-            self.y = np.repeat(self.y, 3)
-            self.azimuth = np.tile(self.AZIMUTH, 19*self.num_clusters)
-            self.elevation = np.tile(self.ELEVATION, 3*19*self.num_clusters)
+            
 
             # In the end, we have to update the number of base stations
             self.num_base_stations = len(self.x)
@@ -100,9 +114,10 @@ class TopologyMacrocell(Topology):
 
 
 if __name__ == '__main__':
-    intersite_distance = 500
+    intersite_distance = 3000
     num_clusters = 1
-    topology = TopologyMacrocell(intersite_distance, num_clusters)
+    tam_cluster = 1
+    topology = TopologyMacrocell(intersite_distance, num_clusters, tam_cluster)
     topology.calculate_coordinates()
 
     fig = plt.figure(figsize=(8,8), facecolor='w', edgecolor='k')  # create a figure object

@@ -66,6 +66,10 @@ class Parameters(object):
         # V2X
         #######################################################################
         self.v2x.topology                = config.get("V2X", "topology")
+        self.v2x.num_macrocell_sites     = config.getint("V2X", "num_macrocell_sites")
+        self.v2x.num_clusters            = config.getint("V2X", "num_clusters")
+        self.v2x.tam_cluster            = config.getint("V2X", "tam_cluster")
+        self.v2x.intersite_distance      = config.getfloat("V2X", "intersite_distance")
         self.v2x.interfered_with         = config.getboolean("V2X", "interfered_with")
         self.v2x.frequency               = config.getfloat("V2X", "frequency")
         self.v2x.bandwidth               = config.getfloat("V2X", "bandwidth")
@@ -155,6 +159,7 @@ class Parameters(object):
         self.v2i.n_colums = config.getint("V2I", "n_colums")
         self.v2i.v_per_street_grid_ref = config.getint("V2I", "v_per_street_grid_ref")
         self.v2i.street_width = config.getint("V2I", "street_width")
+        self.v2i.num_blocks_per_cell = config.getint("V2I", "num_blocks_per_cell")
 
         #######################################################################
         # V2I ROAD
@@ -163,6 +168,8 @@ class Parameters(object):
         self.v2iroad.n_lines = config.getint("V2IROAD", "n_lines")
         self.v2iroad.road_inclination = config.getint("V2IROAD", "road_inclination")
         self.v2iroad.v_per_rsu = config.getint("V2IROAD", "v_per_rsu")
+        self.v2iroad.num_roads_per_cell = config.getint("V2IROAD", "num_roads_per_cell")
+        self.v2iroad.line_w = config.getint("V2IROAD", "line_w")
         
         #######################################################################
         # FSS space station

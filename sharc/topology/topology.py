@@ -29,11 +29,13 @@ class Topology(object):
         self.indoor = np.empty(0)
         self.num_rsu = -1
         self.static_rsu = False
+        self.static_base_stations = False
         self.x_block = np.empty(0)
         self.y_block = np.empty(0)
         self.x_line = np.empty(0)
         self.y_line = np.empty(0)
         self.road_inclination = np.empty(0)
+        self.tam_cluster = -1
 
 
     @abstractmethod
