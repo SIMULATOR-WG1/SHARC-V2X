@@ -247,7 +247,7 @@ class Simulation(ABC, Observable):
             self.v2x_v_antenna_gain = gain_b
             
         # calculate coupling loss
-        if self.parameters.v2x.tam_cluster == 1 and self.parameters.v2i.num_blocks_per_cell == 1:
+        if self.parameters.v2x.tam_cluster == 1 and self.parameters.v2i.num_blocks_per_cell ==1 or self.parameters.v2iroad.num_roads_per_cell == 1:
             coupling_loss = (path_loss - gain_a - gain_b)
         else:
             coupling_loss = np.squeeze(path_loss - gain_a - gain_b)

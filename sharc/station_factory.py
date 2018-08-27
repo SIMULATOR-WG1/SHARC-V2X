@@ -479,7 +479,7 @@ class StationFactory(object):
         rsu = StationManager(num_rsu)
         rsu.active = np.zeros(num_rsu, dtype=bool)
         
-        num_v = num_rsu*paramv2iroad.v_per_rsu
+        num_v = num_rsu*param.v_per_rsu
 
         v2i_v = StationManager(num_v)
         v2i_v.station_type = StationType.V2X_V
@@ -506,8 +506,8 @@ class StationFactory(object):
         y_min = 0  
         y_max = topology.n_lines*topology.line_w
                                 
-        x = (x_max - x_min)*random_number_gen.random_sample(paramv2iroad.v_per_rsu) + x_min                
-        y = (y_max - y_min)*random_number_gen.random_sample(paramv2iroad.v_per_rsu) + y_min
+        x = (x_max - x_min)*random_number_gen.random_sample(param.v_per_rsu) + x_min                
+        y = (y_max - y_min)*random_number_gen.random_sample(param.v_per_rsu) + y_min
         
         #Change of coordinates to inlcude veicles over inclined road
         x_2 = x*math.cos(paramv2iroad.road_inclination*3.1415/180)
@@ -517,7 +517,7 @@ class StationFactory(object):
         v_y.extend(y_2)
         
         for rsu in range(num_rsu):
-            idx = [i for i in range(rsu*paramv2iroad.v_per_rsu, rsu*paramv2iroad.v_per_rsu + paramv2iroad.v_per_rsu)]
+            idx = [i for i in range(rsu*param.v_per_rsu, rsu*param.v_per_rsu + param.v_per_rsu)]
             x2 = v_x + topology.x[rsu]
             y2 = v_y + topology.y[rsu]-paramv2iroad.n_lines*paramv2iroad.line_w/2-35
             v_x2.extend(x2)
@@ -999,7 +999,7 @@ if __name__ == '__main__':
 #    paramv2iroad.n_lines = 6
 #    paramv2iroad.line_w = 4
 #    paramv2iroad.road_inclination = 50
-#    paramv2iroad.v_per_rsu = 50
+#    param.v_per_rsu = 50
 #    paramv2iroad.num_roads_per_cell = 1
 #    param.rsu_height = 6
 #    param.v_height = 1.5

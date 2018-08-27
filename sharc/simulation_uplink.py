@@ -164,7 +164,7 @@ class SimulationUplink(Simulation):
         rsu_active = np.where(self.rsu.active)[0]
         tx_power = self.param_system.tx_power_density + 10*np.log10(self.rsu.bandwidth*1e6) + 30
         for rsu in rsu_active:
-            active_beams = [i for i in range(rsu*self.parameters.v2i.v_per_street_grid_ref*8, (rsu+1)*self.parameters.v2i.v_per_street_grid_ref*8)]
+            active_beams = [i for i in range(rsu*self.parameters.v2i.v_per_street_grid_ref*8, (rsu+1)*self.parameters.v2x.v_per_rsu)]
             self.rsu.ext_interference[rsu] = tx_power[rsu] - self.coupling_loss_v2x_system[active_beams] \
                                             - self.parameters.v2x.rsu_ohmic_loss
 
@@ -205,10 +205,10 @@ class SimulationUplink(Simulation):
 
                 interference_v = self.v.tx_power[v] - self.parameters.v2x.v_ohmic_loss \
                                   - self.parameters.v2x.v_body_loss \
-                                  - self.coupling_loss_v2x_system[v]
+                                  - self.coupling_loss_v2x_system ## Change  self.coupling_loss_v2x_system[v], problems in matrix add.
                 weights = self.calculate_bw_weights(self.parameters.v2x.bandwidth,
                                                     self.param_system.bandwidth,
-                                                    self.parameters.v2i.v_per_street_grid_ref*8)
+                                                    self.parameters.v2x.v_per_rsu)
                 rx_interference += np.sum(weights*np.power(10, 0.1*interference_v)) / 10**(acs/10.)
 
             if self.adjacent_channel:
@@ -267,7 +267,7 @@ class SimulationUplink(Simulation):
                 self.results.v2x_ul_sinr_ext.extend(self.rsu.sinr_ext[rsu].tolist())
                 self.results.v2x_ul_inr.extend(self.rsu.inr[rsu].tolist())
 
-                active_beams = [i for i in range(rsu*self.parameters.v2i.v_per_street_grid_ref*8, (rsu+1)*self.parameters.v2i.v_per_street_grid_ref*8)]
+                active_beams = [i for i in range(rsu*self.parameters.v2i.v_per_street_grid_ref*8, (rsu+1)*self.parameters.v2x.v_per_rsu)]
                 self.results.system_v2x_antenna_gain.extend(self.system_v2x_antenna_gain[0,active_beams])
                 self.results.v2x_system_antenna_gain.extend(self.v2x_system_antenna_gain[0,active_beams])
             else:

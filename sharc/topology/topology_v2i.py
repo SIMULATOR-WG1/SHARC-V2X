@@ -276,10 +276,10 @@ if __name__ == '__main__':
     param.n_colums = 1
     
     param.street_width = 14
-    param.num_blocks_per_cell = 2
+    param.num_blocks_per_cell = 12
     num_clusters = 1
-    intersite_distance = 4000
-    tam_cluster = 1
+    intersite_distance = 708350
+    tam_cluster = 2
     topology = TopologyV2i(param, intersite_distance,num_clusters,tam_cluster)
     topology.calculate_coordinates()
     
@@ -299,8 +299,8 @@ if __name__ == '__main__':
     plt.tight_layout()    
     
     axes = plt.gca()
-    axes.set_xlim([-param.street_width-10000, 5*param.n_rows*topology.b_w + param.n_rows * 4 * param.street_width + param.street_width+10000])
-    axes.set_ylim([-param.street_width-10000, 5*param.n_colums*topology.b_d + param.n_colums * 4 * param.street_width + param.street_width+10000])
+    axes.set_xlim([-param.street_width-2000000, 5*param.n_rows*topology.b_w + param.n_rows * 4 * param.street_width + param.street_width+2000000])
+    axes.set_ylim([-param.street_width-2000000, 5*param.n_colums*topology.b_d + param.n_colums * 4 * param.street_width + param.street_width+2000000])
     
     plt.show()    
     

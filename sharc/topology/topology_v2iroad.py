@@ -246,6 +246,7 @@ if __name__ == '__main__':
     param.n_lines = 3
     param.road_inclination = 20
     param.num_roads_per_cell = 2
+    param.line_w = 4
     num_clusters = 1
     intersite_distance = 4000
     tam_cluster = 2
