@@ -248,7 +248,7 @@ class TopologyV2i(Topology):
         blocks_area=self.param.num_blocks_per_cell*dim_blocks_x*dim_blocks_y
         
         if blocks_area >= macrocell_area:
-                    return False
+            return False
 
         return True
             
