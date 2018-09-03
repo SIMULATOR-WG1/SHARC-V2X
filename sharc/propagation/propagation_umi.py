@@ -13,8 +13,7 @@ import numpy as np
 class PropagationUMi(Propagation):
     """
     Implements the Urban Micro path loss model (Street Canyon) with LOS probability according
-    to 3GPP TR 38.900 v14.2.0.
-    TODO: calculate the effective environment height for the generic case
+    to 3GPP TR 38.901 v15.0
     """
 
     def get_loss(self, *args, **kwargs) -> np.array:

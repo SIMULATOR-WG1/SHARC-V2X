@@ -3,6 +3,7 @@
 Created on Mon Jun  5 16:56:13 2017
 
 @author: edgar
+Modified for V2X project on Jul 10 by Carlos Rodriguez
 """
 
 from sharc.propagation.propagation import Propagation
@@ -14,8 +15,7 @@ from cycler import cycler
 class PropagationUMa(Propagation):
     """
     Implements the Urban Macro path loss model with LOS probability according
-    to 3GPP TR 38.900 v14.2.0.
-    TODO: calculate the effective environment height for the generic case
+    to 3GPP TR 38.901 v15.0.0.
     """
 
     def get_loss(self, *args, **kwargs) -> np.array:
@@ -99,11 +99,11 @@ class PropagationUMa(Propagation):
         loss = np.empty(distance_2D.shape)
 
         if len(idl[0]):
-            loss[idl] = 20*np.log10(distance_3D[idl]) + 20*np.log10(frequency[idl]) - 27.55
+            loss[idl] = 22*np.log10(distance_3D[idl]) + 20*np.log10(frequency[idl]) - 32.0
 
         if len(idg[0]):
-            fitting_term = -10*np.log10(breakpoint_distance**2 +(h_bs[:,np.newaxis] - h_ue)**2)
-            loss[idg] = 40*np.log10(distance_3D[idg]) + 20*np.log10(frequency[idg]) - 27.55 \
+            fitting_term = -9*np.log10(breakpoint_distance**2 +(h_bs[:,np.newaxis] - h_ue)**2)
+            loss[idg] = 40*np.log10(distance_3D[idg]) + 20*np.log10(frequency[idg]) - 32.0 \
                 + fitting_term[idg]
 
         if shadowing_std:

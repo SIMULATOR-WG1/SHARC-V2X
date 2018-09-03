@@ -247,7 +247,7 @@ class Simulation(ABC, Observable):
             self.v2x_v_antenna_gain = gain_b
             
         # calculate coupling loss
-        if self.parameters.v2x.tam_cluster == 1 and (self.parameters.v2i.num_blocks_per_cell ==1 or self.parameters.v2iroad.num_roads_per_cell == 1):
+        if self.parameters.v2x.tam_cluster == 1 and (self.parameters.v2i.num_blocks_per_cell ==1 or self.parameters.v2iroad.num_roads_per_cell == 1) and station_a.station_type is StationType.V2X_I:
             coupling_loss = (path_loss - gain_a - gain_b)
         else:
             coupling_loss = np.squeeze(path_loss - gain_a - gain_b)
@@ -434,7 +434,7 @@ class Simulation(ABC, Observable):
         elif bw_v2x > bw_sys:
             weights = np.zeros(ue_k)
 
-            bw_per_rbg = bw_v2x / (self.parameters.v2i.v_per_street_grid_ref*8)  # 8 is the number of streets per ref. grid
+            bw_per_rbg = bw_v2x / (self.parameters.v2x.v_per_rsu)  
 
             # number of resource block groups that will have weight equal to 1
             rb_ones = math.floor( bw_sys / bw_per_rbg )
