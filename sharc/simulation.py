@@ -112,7 +112,11 @@ class Simulation(ABC, Observable):
 
         self.topology.calculate_coordinates()
         num_rsu = self.topology.num_rsu
-        num_v = num_rsu*self.parameters.v2x.v_per_rsu   # 8 is the number of streets per ref. grid
+        if self.parameters.v2x.topology == "V2I" or self.parameters.v2x.topology == "V2IROAD":
+            num_v = num_rsu*self.parameters.v2x.v_per_rsu   
+        else:
+            num_v = num_rsu*3   #3 is the number of Veicles for V2V Urban
+                
 
         self.rsu_power_gain = 10*math.log10(self.parameters.antenna_v2x.rsu_tx_n_rows*
                                            self.parameters.antenna_v2x.rsu_tx_n_columns)
@@ -258,7 +262,13 @@ class Simulation(ABC, Observable):
         """
         Link the Veicles to the serving RSU. 
         """
-        num_v_per_rsu = self.parameters.v2x.v_per_rsu 
+        
+        
+        if self.parameters.v2x.topology == "V2I" or self.parameters.v2x.topology == "V2IROAD":
+            num_v_per_rsu = self.parameters.v2x.v_per_rsu    
+        else:
+            num_v_per_rsu = 3   #3 is the number of Veicles for V2V Urban
+             
         rsu_active = np.where(self.rsu.active)[0]
         for rsu in rsu_active:
             v_list = [i for i in range(rsu*num_v_per_rsu, rsu*num_v_per_rsu + num_v_per_rsu)]

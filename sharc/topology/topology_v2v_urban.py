@@ -7,7 +7,7 @@ Modified for V2X project on Jul 10 by Carlos Rodriguez
 """
 
 from sharc.topology.topology import Topology
-from sharc.parameters.parameters_v2i import ParametersV2i
+from sharc.parameters.parameters_v2v_urban import ParametersV2vurban
 from sharc.topology.topology_macrocell import TopologyMacrocell
 from shapely.geometry import Polygon
 import matplotlib.pyplot as plt
@@ -17,15 +17,15 @@ import numpy as np
 import math
 import sys
 
-class TopologyV2i(Topology):
+class TopologyV2v_urban(Topology):
     """
-    Generates the coordinates of the sites based on the V2X network
+    Generates the coordinates of the sites based on the V2V network
     topology. 
     """
     # Maximum number of tentatives when creating blocks and checking if they overlap
     MAX_NUM_LOOPS = 10000
     
-    def __init__(self, param: ParametersV2i, intersite_distance: float, num_clusters: int, tam_cluster: int):
+    def __init__(self, param: ParametersV2vurban, intersite_distance: float, num_clusters: int, tam_cluster: int):
 
         """
         Constructor method that sets the parameters and already calls the
@@ -49,8 +49,8 @@ class TopologyV2i(Topology):
         self.b_h = 3
 
         # This value is hard coded because initially this is the only supported
-        # value. The value of 680 divided by 1.7 gives cell radius of 400 mts of an RSU
-        intersite_distance_rsu = 680
+        # value. The value of 170 divided by 1.7 gives cell radius of 400 mts of an Veicle
+        intersite_distance_rsu = 170   # For V2V topology RSU is virtual only for power control calculations
         
         #Considering hexagonal topology, D/sqrt(3) = Cell radius
         cell_radius = intersite_distance_rsu/1.7    
@@ -83,6 +83,7 @@ class TopologyV2i(Topology):
         y_bs = np.empty(0)
         x = np.empty(0)
         y = np.empty(0)
+        
         # condition if 1 macrocell sector only used
         if self.tam_cluster == 1:
             blocks_validated = False
@@ -105,7 +106,7 @@ class TopologyV2i(Topology):
                                                                r)
                                     
                 num_loops = num_loops + 1
-                if num_loops > TopologyV2i.MAX_NUM_LOOPS:
+                if num_loops > TopologyV2v_urban.MAX_NUM_LOOPS:
                     sys.stderr.write("ERROR\nInfinite loop while creating blocks.\nReview  macro cell intersite distance.\n")
                     sys.exit(1)
 
@@ -114,20 +115,39 @@ class TopologyV2i(Topology):
                     self.x_block = np.concatenate((self.x_block, x_base + r*(self.b_w + self.street_width)))
                     self.y_block = np.concatenate((self.y_block, y_base + c*(self.b_d + self.street_width)))  
             
-            pos_x_rsu = self.b_w*2.5 + 2*self.street_width
-            pos_y_rsu = self.b_d*2 + 3/2*self.street_width
-            x_bs = np.array([ pos_x_rsu ])
-            y_bs = np.array([ pos_y_rsu ])
+            # For virtual RSU, there will be 16 Veicles with 100 mts coverage          
+            for virtual_rsu_x in  range(1,5):
+                for virtual_rsu_y in range(1,5):
+                    pos_x_rsu = self.b_d*(virtual_rsu_x) + self.street_width*(virtual_rsu_x-1) +self.street_width/2
+                    pos_y_rsu = self.b_d*(virtual_rsu_y) + self.street_width*(virtual_rsu_y-1) +self.street_width/2
+                    x_bs_aux = np.array([ pos_x_rsu ])
+                    y_bs_aux = np.array([ pos_y_rsu ])
+                    x_bs = np.concatenate((x_bs, x_bs_aux))
+                    y_bs = np.concatenate((y_bs, y_bs_aux))
+                    
             #calculation of RSU  coordinates for multiple basic grid 5x5                 
             for r in range(self.n_rows):
                 for c in range(self.n_colums):
-                    x = np.concatenate((x, x_bs + x_base + r*5*(self.b_w + self.street_width)))
-                    y = np.concatenate((y, y_bs + y_base + c*5*(self.b_d + self.street_width)))
+                    x_aux = x_bs.reshape(16,1) + x_base + r*5*(self.b_w + self.street_width)
+                    y_aux= y_bs.reshape(16,1) + y_base + c*5*(self.b_d + self.street_width)
+                    x = np.concatenate((x, x_aux.reshape(16*self.param.num_blocks_per_cell)))
+                    y = np.concatenate((y, y_aux.reshape(16*self.param.num_blocks_per_cell)))
             self.x = x
             self.y = y
+        
         #condition if 19 macrocell sites are considered    
         else:
             i = 0
+            # For virtual RSU, there will be 16 Veicles with 100 mts coverage          
+            for virtual_rsu_x in  range(1,5):
+                for virtual_rsu_y in range(1,5):
+                    pos_x_rsu = self.b_d*(virtual_rsu_x) + self.street_width*(virtual_rsu_x-1) +self.street_width/2
+                    pos_y_rsu = self.b_d*(virtual_rsu_y) + self.street_width*(virtual_rsu_y-1) +self.street_width/2
+                    x_bs_aux = np.array([ pos_x_rsu ])
+                    y_bs_aux = np.array([ pos_y_rsu ])
+                    x_bs = np.concatenate((x_bs, x_bs_aux))
+                    y_bs = np.concatenate((y_bs, y_bs_aux))
+
             for cell_x, cell_y, cell_azimuth in zip(self.macrocell.x, self.macrocell.y, self.macrocell.azimuth):
                 #print("base station #{}".format(i))
                 i += 1
@@ -155,7 +175,7 @@ class TopologyV2i(Topology):
                                                                    r)
                                     
                     num_loops = num_loops + 1
-                    if num_loops > TopologyV2i.MAX_NUM_LOOPS:
+                    if num_loops > TopologyV2v_urban.MAX_NUM_LOOPS:
                         sys.stderr.write("ERROR\nInfinite loop while creating blocks.\nReview  macro cell intersite distance.\n")
                         sys.exit(1)
 
@@ -163,16 +183,14 @@ class TopologyV2i(Topology):
                     for c in range(5*self.n_colums):
                         self.x_block = np.concatenate((self.x_block, x_base + r*(self.b_w + self.street_width)))
                         self.y_block = np.concatenate((self.y_block, y_base + c*(self.b_d + self.street_width)))
-
-                pos_x_rsu = self.b_w*2.5 + 2*self.street_width
-                pos_y_rsu = self.b_d*2 + 3/2*self.street_width
-                x_bs = np.array([ pos_x_rsu ])
-                y_bs = np.array([ pos_y_rsu ])
+                        
                 #calculation of RSU  coordinates for multiple basic grid 5x5                 
                 for r in range(self.n_rows):
                     for c in range(self.n_colums):
-                        x = np.concatenate((x, x_bs + x_base + r*5*(self.b_w + self.street_width)))
-                        y = np.concatenate((y, y_bs + y_base + c*5*(self.b_d + self.street_width)))
+                        x_aux = x_bs.reshape(16,1) + x_base + r*5*(self.b_w + self.street_width)
+                        y_aux= y_bs.reshape(16,1) + y_base + c*5*(self.b_d + self.street_width)
+                        x = np.concatenate((x, x_aux.reshape(16*self.param.num_blocks_per_cell)))
+                        y = np.concatenate((y, y_aux.reshape(16*self.param.num_blocks_per_cell)))
                 self.x = x
                 self.y = y              
                 
@@ -270,9 +288,9 @@ class TopologyV2i(Topology):
 
 
 if __name__ == '__main__':
-    param = ParametersV2i()
-    param.intersite_distance_rsu = 680
-    param.n_rows = 1      
+    param = ParametersV2vurban()
+#    param.intersite_distance_rsu = 680
+    param.n_rows = 1     
     param.n_colums = 1
     
     param.street_width = 14
@@ -280,7 +298,7 @@ if __name__ == '__main__':
     num_clusters = 1
     intersite_distance = 5000
     tam_cluster = 1
-    topology = TopologyV2i(param, intersite_distance,num_clusters,tam_cluster)
+    topology = TopologyV2v_urban(param, intersite_distance,num_clusters,tam_cluster)
     topology.calculate_coordinates()
     
     topology2 = TopologyMacrocell(intersite_distance, num_clusters,tam_cluster)
