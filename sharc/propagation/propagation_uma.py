@@ -40,8 +40,8 @@ class PropagationUMa(Propagation):
         d_3D = kwargs["distance_3D"]
         d_2D = kwargs["distance_2D"]
         f = kwargs["frequency"]
-        h_bs = kwargs["bs_height"]
-        h_ue = kwargs["ue_height"]
+        h_bs = kwargs["rsu_height"]
+        h_ue = kwargs["v_height"]
         h_e = np.ones(d_2D.shape)
         std = kwargs["shadowing"]
 
