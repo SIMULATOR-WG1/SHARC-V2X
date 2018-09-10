@@ -205,7 +205,7 @@ class SimulationUplink(Simulation):
 
                 interference_v = self.v.tx_power[v] - self.parameters.v2x.v_ohmic_loss \
                                   - self.parameters.v2x.v_body_loss \
-                                  - self.coupling_loss_v2x_system ## Change  self.coupling_loss_v2x_system[v], problems in matrix add.
+                                  - self.coupling_loss_v2x_system[v] ## Change  self.coupling_loss_v2x_system[v], problems in matrix add.
                 weights = self.calculate_bw_weights(self.parameters.v2x.bandwidth,
                                                     self.param_system.bandwidth,
                                                     self.parameters.v2x.v_per_rsu)

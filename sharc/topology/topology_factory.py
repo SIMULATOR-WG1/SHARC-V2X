@@ -23,7 +23,7 @@ class TopologyFactory(object):
     @staticmethod
     def createTopology(parameters: Parameters) -> Topology:
         if parameters.v2x.topology == "V2V":
-            return TopologySingleBaseStation(parameters.imt.intersite_distance*2/3, parameters.imt.num_clusters)
+            return TopologyV2v_urban(parameters.v2x.intersite_distance, parameters.v2x.num_clusters, parameters.v2x.tam_cluster)
         elif parameters.v2x.topology == "V2I":
             return TopologyV2i(parameters.v2i, parameters.v2x.intersite_distance,parameters.v2x.num_clusters, parameters.v2x.tam_cluster)
         elif parameters.v2x.topology == "V2IROAD":
