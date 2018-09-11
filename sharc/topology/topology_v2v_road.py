@@ -42,7 +42,7 @@ class TopologyV2vroad(Topology):
 
         
         # This value is hard coded because initially this is the only supported
-        # value. The value of 1732 
+        # value. The value of 170 
         
         self.intersite_distance_rsu = 170
         

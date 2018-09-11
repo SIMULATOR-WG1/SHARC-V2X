@@ -17,6 +17,7 @@ from sharc.parameters.parameters_v2x import ParametersV2x
 from sharc.parameters.parameters_v2i import ParametersV2i
 from sharc.parameters.parameters_v2v_urban import ParametersV2vurban
 from sharc.parameters.parameters_v2iroad import ParametersV2iroad
+from sharc.parameters.parameters_v2vroad import ParametersV2vroad
 from sharc.parameters.parameters_antenna_v2x import ParametersAntennaV2x
 from sharc.parameters.parameters_fs import ParametersFs
 from sharc.parameters.parameters_fss_ss import ParametersFssSs
@@ -44,6 +45,7 @@ from sharc.topology.topology import Topology
 from sharc.topology.topology_macrocell import TopologyMacrocell
 from sharc.topology.topology_v2i import TopologyV2i
 from sharc.topology.topology_v2iroad import TopologyV2iroad
+from sharc.topology.topology_v2v_road import TopologyV2vroad
 from sharc.spectral_mask_3gpp import SpectralMask3Gpp
 
 
