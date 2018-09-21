@@ -169,11 +169,11 @@ class StationFactory(object):
             
             # In order to mantain 50 veicles per RSU, the first street will be with 8 cars
             if b == 1:
-                x = (x_max - x_min)*random_number_gen.random_sample(8) + x_min                
-                y = (y_max - y_min)*random_number_gen.random_sample(8) + y_min
+                x = (x_max - x_min)*random_number_gen.random_sample(1) + x_min #8               
+                y = (y_max - y_min)*random_number_gen.random_sample(1) + y_min
             else:   
-                x = (x_max - x_min)*random_number_gen.random_sample(6) + x_min                
-                y = (y_max - y_min)*random_number_gen.random_sample(6) + y_min
+                x = (x_max - x_min)*random_number_gen.random_sample(1) + x_min   #6             
+                y = (y_max - y_min)*random_number_gen.random_sample(1) + y_min
             
             v_x.extend(x)
             v_y.extend(y)
