@@ -240,7 +240,8 @@ class Simulation(ABC, Observable):
                                              v_height=station_b.height,
                                              elevation=elevation_angles,
                                              shadowing=self.parameters.v2x.shadowing,
-                                             line_of_sight_prob=self.parameters.v2x.line_of_sight_prob)
+                                             line_of_sight_prob=self.parameters.v2x.line_of_sight_prob,
+                                             relative_permittivity = self.parameters.v2x.relative_permittivity)
             # define antenna gains
             gain_a = self.calculate_gains(station_a, station_b)
             gain_b = np.transpose(self.calculate_gains(station_b, station_a))

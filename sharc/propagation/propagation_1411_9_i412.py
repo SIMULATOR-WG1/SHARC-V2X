@@ -27,9 +27,10 @@ class Propagation1411I412(Propagation):
         f = kwargs["frequency"]
         number_of_sectors = kwargs.pop("number_of_sectors",1)
 
-
-        h1 = kwargs["rsu_height"]
-        h2 = kwargs["v_height"]
+        h1_val = kwargs["rsu_height"]
+        h2_val = kwargs["v_height"]
+        h1 = np.ones(dist.shape)*h1_val[0]
+        h2 = np.ones(dist.shape)*h2_val[0]
         hs = 1 # according to 3GPP TR.38.901
         lmbda = 299792458 / (f * 1e6)
         
@@ -50,5 +51,7 @@ class Propagation1411I412(Propagation):
 
         if number_of_sectors > 1:
             loss = np.repeat(loss, number_of_sectors, 1)
+            
+        loss = loss.reshape(dist.shape)
 
         return loss

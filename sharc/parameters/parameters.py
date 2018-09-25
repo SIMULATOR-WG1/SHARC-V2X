@@ -101,6 +101,7 @@ class Parameters(object):
         self.v2x.dl_sinr_min             = config.getfloat("V2X", "dl_sinr_min")
         self.v2x.dl_sinr_max             = config.getfloat("V2X", "dl_sinr_max")
         self.v2x.channel_model           = config.get("V2X", "channel_model")
+        self.v2x.relative_permittivity   = config.getfloat("V2X", "relative permittivity")
         self.v2x.line_of_sight_prob      = config.getfloat("V2X", "line_of_sight_prob")
         self.v2x.shadowing               = config.getboolean("V2X", "shadowing")
         self.v2x.noise_temperature       = config.getfloat("V2X", "noise_temperature")
