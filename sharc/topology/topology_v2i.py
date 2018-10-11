@@ -272,13 +272,13 @@ class TopologyV2i(Topology):
 if __name__ == '__main__':
     param = ParametersV2i()
     param.intersite_distance_rsu = 680
-    param.n_rows = 1      
-    param.n_colums = 1
+    param.n_rows = 3      
+    param.n_colums = 2
     
     param.street_width = 14
-    param.num_blocks_per_cell = 2
+    param.num_blocks_per_cell = 1
     num_clusters = 1
-    intersite_distance = 5000
+    intersite_distance = 11000
     tam_cluster = 1
     topology = TopologyV2i(param, intersite_distance,num_clusters,tam_cluster)
     topology.calculate_coordinates()

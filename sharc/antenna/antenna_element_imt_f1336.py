@@ -153,8 +153,8 @@ if __name__ == '__main__':
     param = ParametersAntennaV2x()
 
     param.element_max_g = 0
-    param.element_phi_deg_3db = 7200
-    param.element_theta_deg_3db = 30
+    param.element_phi_deg_3db = 360
+    param.element_theta_deg_3db = 60
 
     # 0 degrees tilt
     param.downtilt_deg = 0

@@ -241,7 +241,7 @@ class TopologyV2vroad(Topology):
 
 
 if __name__ == '__main__':
-    param = ParametersV2iroad()
+    param = ParametersV2vroad()
     param.n_roads = 2   
     param.n_lines = 3
     param.road_inclination = 20

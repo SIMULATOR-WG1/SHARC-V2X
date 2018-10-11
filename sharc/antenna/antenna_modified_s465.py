@@ -44,7 +44,7 @@ class AntennaModifiedS465(Antenna):
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
-    phi = np.linspace(0.1, 100, num = 100000)
+    off_axis_angle_vec = np.linspace(0.1, 100, num = 100000)
 
     # initialize antenna parameters
     param27 = ParametersFssEs()
@@ -52,28 +52,30 @@ if __name__ == '__main__':
     param27.frequency = 27000
     param27.antenna_gain = 50
     param27.diameter = 0.45
-    antenna27 = AntennaS465(param27)
+    param27.antenna_envelope_gain = -10
+    antenna27 = AntennaModifiedS465(param27)
 
-    gain27 = antenna27.calculate_gain(phi_vec=phi)
+    gain27 = antenna27.calculate_gain(off_axis_angle_vec=off_axis_angle_vec)
 
     param43 = ParametersFssEs()
     param43.antenna_pattern = "ITU-R S.465-6"
     param43.frequency = 43000
     param43.antenna_gain = 50
     param43.diameter = 1.8
-    antenna43 = AntennaS465(param43)
-    gain43 = antenna43.calculate_gain(phi_vec=phi)
+    param43.antenna_envelope_gain = -12
+    antenna43 = AntennaModifiedS465(param43)
+    gain43 = antenna43.calculate_gain(off_axis_angle_vec=off_axis_angle_vec)
 
     fig = plt.figure(figsize=(8,7), facecolor='w', edgecolor='k')  # create a figure object
 
-    plt.semilogx(phi, gain27 - param27.antenna_gain, "-b", label = "$f = 27$ $GHz,$ $D = 0.45$ $m$")
-    plt.semilogx(phi, gain43 - param43.antenna_gain, "-r", label = "$f = 43$ $GHz,$ $D = 1.8$ $m$")
+    plt.semilogx(off_axis_angle_vec, gain27 - param27.antenna_gain, "-b", label = "$f = 27$ $GHz,$ $D = 0.45$ $m$")
+   # plt.semilogx(off_axis_angle_vec, gain43 - param43.antenna_gain, "-r", label = "$f = 43$ $GHz,$ $D = 1.8$ $m$")
 
     plt.title("ITU-R S.465-6 antenna radiation pattern")
     plt.xlabel("Off-axis angle $\phi$ [deg]")
     plt.ylabel("Gain relative to $G_m$ [dB]")
     plt.legend(loc="lower left")
-    plt.xlim((phi[0], phi[-1]))
+    plt.xlim((off_axis_angle_vec[0], off_axis_angle_vec[-1]))
     plt.ylim((-80, 10))
 
     #ax = plt.gca()

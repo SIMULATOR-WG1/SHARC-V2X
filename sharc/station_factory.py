@@ -46,6 +46,7 @@ from sharc.topology.topology_macrocell import TopologyMacrocell
 from sharc.topology.topology_v2i import TopologyV2i
 from sharc.topology.topology_v2iroad import TopologyV2iroad
 from sharc.topology.topology_v2v_road import TopologyV2vroad
+from sharc.topology.topology_v2v_urban import TopologyV2v_urban
 from sharc.spectral_mask_3gpp import SpectralMask3Gpp
 
 
@@ -158,13 +159,13 @@ class StationFactory(object):
             if b < 4:   #Horizontal streets
                 y_min = topology.y[0] + (b-1)*(topology.b_d + topology.street_width)  - topology.street_width/2
                 y_max = topology.y[0] + (b-1)*(topology.b_d + topology.street_width)  + topology.street_width/2
-                x_min = topology.x[0] - topology.cell_radius+100
-                x_max = topology.x[0] + topology.cell_radius-100    
+                x_min = topology.x[0] - topology.cell_radius+200
+                x_max = topology.x[0] + topology.cell_radius-200    
                                 
             elif b >= 4: #Vertical streets
                 x_min = topology.x[0] + (-3/2 + b - 4)*(topology.b_w + topology.street_width)  - topology.street_width/2
                 x_max = topology.x[0] + (-3/2 + b - 4)*(topology.b_w + topology.street_width)  + topology.street_width/2           
-                y_min = topology.y[0] - topology.cell_radius+100
+                y_min = topology.y[0] - topology.cell_radius+200
                 y_max = topology.y[0] + topology.cell_radius 
             
             # In order to mantain 50 veicles per RSU, the first street will be with 8 cars
@@ -192,7 +193,7 @@ class StationFactory(object):
             # calculate elevation angle
             # psi is the vertical angle of the Veicle wrt the serving RSU
             distance = np.sqrt((topology.x[rsu] - x2)**2 + (topology.y[rsu] - y2)**2)
-            psi = np.degrees(np.arctan((param.rsu_height - param.v_height)/distance))
+            psi = np.degrees(np.arctan((param.rsu_height - param.v_height)/distance))-90
             v2i_v.elevation[idx] = elevation[idx] + psi
 
             
@@ -284,7 +285,7 @@ class StationFactory(object):
             # calculate elevation angle
             # psi is the vertical angle of the Veicle wrt the serving RSU
             distance = np.sqrt((topology.x[rsu] - x)**2 + (topology.y[rsu] - y)**2)
-            psi = np.degrees(np.arctan((param.rsu_height - param.v_height)/distance))
+            psi = np.degrees(np.arctan((param.rsu_height - param.v_height)/distance))-90
             v2i_v.elevation[idx] = elevation[idx] + psi
 
             
@@ -351,8 +352,8 @@ class StationFactory(object):
 
 
         # Rectangle of the first road of reference
-        x_min =  - topology.cell_radius
-        x_max =  topology.cell_radius
+        x_min =  - topology.cell_radius/3
+        x_max =  topology.cell_radius/3
         y_min = 0  
         y_max = topology.n_lines*topology.line_w
                                 
@@ -380,7 +381,7 @@ class StationFactory(object):
             # calculate elevation angle
             # psi is the vertical angle of the Veicle wrt the serving RSU
             distance = np.sqrt((topology.x[rsu] - x2)**2 + (topology.y[rsu] - y2)**2)
-            psi = np.degrees(np.arctan((param.rsu_height - param.v_height)/distance))
+            psi = np.degrees(np.arctan((param.rsu_height - param.v_height)/distance))-90
             v2i_v.elevation[idx] = elevation[idx] + psi
 
             
@@ -758,110 +759,25 @@ if __name__ == '__main__':
     from matplotlib import pyplot as plt
 
     # plot uniform distribution in macrocell scenario
-####### TEST FOR V2I ON REFERENCE GRID
-#    factory = StationFactory()
-#    param = ParametersV2x()
-#    paramv2i = ParametersV2vurban()
-#    param.n_rows = 1
-#    param.n_colums = 1
-#    param.street_width = 14
-#    param.v_height = 1.5
-#    param.rsu_height = 6
-#    param.bandwidth = 10
-#    param.frequency = 5800
-#    param.v_noise_figure = 6
-#    param.v_per_rsu = 50
-#    param.spectral_mask = 0
-#    param.tam_cluster=2
-#    param.intersite_distance=5000
-#    param.num_clusters = 1
-#    param.num_blocks_per_cell = 3
-#    topology = TopologyV2v_urban(param, param.intersite_distance, param.num_clusters, param.tam_cluster)
-#    topology.calculate_coordinates()
-#    random_number_gen = np.random.RandomState()
-#
-#    class ParamsAux(object):
-#        def __init__(self):
-#            self.ue_distribution_type = "UNIFORM"
-#            self.bs_height = 30
-#            self.ue_height = 3
-#            self.ue_indoor_percent = 0
-#            self.ue_k = 3
-#            self.ue_k_m = 20
-#            self.bandwidth  = np.random.rand()
-#            self.ue_noise_figure = np.random.rand()
-#
-#    params = ParamsAux()
-#
-#    ant_param = ParametersAntennaV2x()
-#
-#    ant_param.rsu_element_pattern = "F1336"
-#    ant_param.rsu_tx_element_max_g = 5
-#    ant_param.rsu_tx_element_phi_deg_3db = 65
-#    ant_param.rsu_tx_element_theta_deg_3db = 65
-#    ant_param.rsu_tx_element_am = 30
-#    ant_param.rsu_tx_element_sla_v = 30
-#    ant_param.rsu_tx_n_rows = 8
-#    ant_param.rsu_tx_n_columns = 8
-#    ant_param.rsu_tx_element_horiz_spacing = 0.5
-#    ant_param.rsu_tx_element_vert_spacing = 0.5
-#    ant_param.rsu_downtilt_deg = 10
-#
-#    ant_param.v_element_pattern = "FIXED"
-#    ant_param.v_tx_element_max_g = 5
-#    ant_param.v_tx_element_phi_deg_3db = 90
-#    ant_param.v_tx_element_theta_deg_3db = 90
-#    ant_param.v_tx_element_am = 25
-#    ant_param.v_tx_element_sla_v = 25
-#    ant_param.v_tx_n_rows = 4
-#    ant_param.v_tx_n_columns = 4
-#    ant_param.v_tx_element_horiz_spacing = 0.5
-#    ant_param.v_tx_element_vert_spacing = 0.5
-#
-#    v2i_v = factory.generate_v2vurban_v(param, paramv2i, ant_param, random_number_gen, topology)
-#
-#    fig = plt.figure(figsize=(8, 8), facecolor='w', edgecolor='k')  # create a figure object
-#    ax = fig.add_subplot(1, 1, 1)  # create an axes object in the figure
-#
-#    topology.plot(ax)
-#
-#    plt.axis('image')
-#    plt.title("V2I topology")
-#    plt.xlabel("x-coordinate [m]")
-#    plt.ylabel("y-coordinate [m]")
-#
-#    plt.plot(v2i_v.x, v2i_v.y, ".")
-#
-#    limit = 1000
-#    axes = plt.gca()
-#    axes.set_xlim([-limit, limit])
-#    axes.set_ylim([-limit, limit])
-#    
-#    plt.tight_layout()
-#    plt.show()
-    
-    
-    ######## TEST FOR V2I ON REFERENCE ROAD
+###### TEST FOR V2I ON REFERENCE GRID
     factory = StationFactory()
     param = ParametersV2x()
-    paramv2iroad = ParametersV2vroad()
-    paramv2iroad.n_roads = 2
-    paramv2iroad.n_lines = 6
-    paramv2iroad.line_w = 4
-    paramv2iroad.road_inclination = 50
-    param.v_per_rsu = 50
-    paramv2iroad.num_roads_per_cell = 1
-    param.rsu_height = 6
+    paramv2i = ParametersV2i()
+    param.n_rows = 3
+    param.n_colums = 2
+    param.street_width = 14
     param.v_height = 1.5
+    param.rsu_height = 10
     param.bandwidth = 10
     param.frequency = 5800
     param.v_noise_figure = 6
+    param.v_per_rsu = 8
     param.spectral_mask = 0
-    num_clusters = 1
-    intersite_distance = 400
-    tam_cluster = 1
-    
-    topology = TopologyV2vroad(paramv2iroad, intersite_distance,num_clusters,tam_cluster)
+    param.tam_cluster=1
+    param.intersite_distance=11000
+    param.num_clusters = 1
+    param.num_blocks_per_cell = 1
+    topology = TopologyV2i(param, param.intersite_distance, param.num_clusters, param.tam_cluster)
     topology.calculate_coordinates()
     random_number_gen = np.random.RandomState()
 
@@ -903,7 +819,7 @@ if __name__ == '__main__':
     ant_param.v_tx_element_horiz_spacing = 0.5
     ant_param.v_tx_element_vert_spacing = 0.5
 
-    v2i_v = factory.generate_v2iroad_v(param, paramv2iroad, ant_param, random_number_gen, topology)
+    v2i_v = factory.generate_v2i_v(param, paramv2i, ant_param, random_number_gen, topology)
 
     fig = plt.figure(figsize=(8, 8), facecolor='w', edgecolor='k')  # create a figure object
     ax = fig.add_subplot(1, 1, 1)  # create an axes object in the figure
@@ -915,15 +831,100 @@ if __name__ == '__main__':
     plt.xlabel("x-coordinate [m]")
     plt.ylabel("y-coordinate [m]")
 
-    axes = plt.gca()
-    x_min = -200#topology.intersite_distance/2-600
-    x_max = 200#topology.intersite_distance/2+200
-    axes.set_xlim([x_min, x_max])
-    axes.set_ylim([-200, 200])
-    #axes.set_ylim([x_min*math.tan(param.road_inclination*3.1415/180), param.n_lines*topology.line_w+math.tan(param.road_inclination*3.1415/180)*x_max])
-    #axes.set_ylim([550, 850])
-    plt.plot(v2i_v.x, v2i_v.y, ".",label = 'Veicles')
-    plt.legend()
+    plt.plot(v2i_v.x, v2i_v.y, ".")
 
+    limit = 2000
+    axes = plt.gca()
+    axes.set_xlim([-limit, limit])
+    axes.set_ylim([-limit, limit])
+    
     plt.tight_layout()
     plt.show()
+    
+    
+    ######## TEST FOR V2I ON REFERENCE ROAD
+#    factory = StationFactory()
+#    param = ParametersV2x()
+#    paramv2iroad = ParametersV2vroad()
+#    paramv2iroad.n_roads = 2
+#    paramv2iroad.n_lines = 6
+#    paramv2iroad.line_w = 4
+#    paramv2iroad.road_inclination = 50
+#    param.v_per_rsu = 50
+#    paramv2iroad.num_roads_per_cell = 1
+#    param.rsu_height = 6
+#    param.v_height = 1.5
+#    param.bandwidth = 10
+#    param.frequency = 5800
+#    param.v_noise_figure = 6
+#    param.spectral_mask = 0
+#    num_clusters = 1
+#    intersite_distance = 400
+#    tam_cluster = 1
+#    
+#    topology = TopologyV2vroad(paramv2iroad, intersite_distance,num_clusters,tam_cluster)
+#    topology.calculate_coordinates()
+#    random_number_gen = np.random.RandomState()
+#
+#    class ParamsAux(object):
+#        def __init__(self):
+#            self.ue_distribution_type = "UNIFORM"
+#            self.bs_height = 30
+#            self.ue_height = 3
+#            self.ue_indoor_percent = 0
+#            self.ue_k = 3
+#            self.ue_k_m = 20
+#            self.bandwidth  = np.random.rand()
+#            self.ue_noise_figure = np.random.rand()
+#
+#    params = ParamsAux()
+#
+#    ant_param = ParametersAntennaV2x()
+#
+#    ant_param.rsu_element_pattern = "F1336"
+#    ant_param.rsu_tx_element_max_g = 5
+#    ant_param.rsu_tx_element_phi_deg_3db = 65
+#    ant_param.rsu_tx_element_theta_deg_3db = 65
+#    ant_param.rsu_tx_element_am = 30
+#    ant_param.rsu_tx_element_sla_v = 30
+#    ant_param.rsu_tx_n_rows = 8
+#    ant_param.rsu_tx_n_columns = 8
+#    ant_param.rsu_tx_element_horiz_spacing = 0.5
+#    ant_param.rsu_tx_element_vert_spacing = 0.5
+#    ant_param.rsu_downtilt_deg = 10
+#
+#    ant_param.v_element_pattern = "FIXED"
+#    ant_param.v_tx_element_max_g = 5
+#    ant_param.v_tx_element_phi_deg_3db = 90
+#    ant_param.v_tx_element_theta_deg_3db = 90
+#    ant_param.v_tx_element_am = 25
+#    ant_param.v_tx_element_sla_v = 25
+#    ant_param.v_tx_n_rows = 4
+#    ant_param.v_tx_n_columns = 4
+#    ant_param.v_tx_element_horiz_spacing = 0.5
+#    ant_param.v_tx_element_vert_spacing = 0.5
+#
+#    v2i_v = factory.generate_v2iroad_v(param, paramv2iroad, ant_param, random_number_gen, topology)
+#
+#    fig = plt.figure(figsize=(8, 8), facecolor='w', edgecolor='k')  # create a figure object
+#    ax = fig.add_subplot(1, 1, 1)  # create an axes object in the figure
+#
+#    topology.plot(ax)
+#
+#    plt.axis('image')
+#    plt.title("V2I topology")
+#    plt.xlabel("x-coordinate [m]")
+#    plt.ylabel("y-coordinate [m]")
+#
+#    axes = plt.gca()
+#    x_min = -200#topology.intersite_distance/2-600
+#    x_max = 200#topology.intersite_distance/2+200
+#    axes.set_xlim([x_min, x_max])
+#    axes.set_ylim([-200, 200])
+#    #axes.set_ylim([x_min*math.tan(param.road_inclination*3.1415/180), param.n_lines*topology.line_w+math.tan(param.road_inclination*3.1415/180)*x_max])
+#    #axes.set_ylim([550, 850])
+#    plt.plot(v2i_v.x, v2i_v.y, ".",label = 'Veicles')
+#    plt.legend()
+#
+#    plt.tight_layout()
+#    plt.show()

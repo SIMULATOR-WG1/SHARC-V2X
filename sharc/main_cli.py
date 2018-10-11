@@ -27,7 +27,7 @@ def main(argv):
         sys.exit(2)
 
     if not opts:
-        param_file = os.path.join(os.getcwd(), "parameters", "parameters.ini")
+        param_file = os.path.join(os.getcwd(), "parameters", "parameters-SP-v2i-ub-DL-f1336-UMi-ITSvi-10km.ini")
     else:
         for opt, arg in opts:
             if opt == "-h":

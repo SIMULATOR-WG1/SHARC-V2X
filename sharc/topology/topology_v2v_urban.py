@@ -116,22 +116,23 @@ class TopologyV2v_urban(Topology):
                     self.y_block = np.concatenate((self.y_block, y_base + c*(self.b_d + self.street_width)))  
             
             # For virtual RSU, there will be 16 Veicles with 100 mts coverage          
-            for virtual_rsu_x in  range(1,5):
-                for virtual_rsu_y in range(1,5):
-                    pos_x_rsu = self.b_d*(virtual_rsu_x) + self.street_width*(virtual_rsu_x-1) +self.street_width/2
-                    pos_y_rsu = self.b_d*(virtual_rsu_y) + self.street_width*(virtual_rsu_y-1) +self.street_width/2
-                    x_bs_aux = np.array([ pos_x_rsu ])
-                    y_bs_aux = np.array([ pos_y_rsu ])
-                    x_bs = np.concatenate((x_bs, x_bs_aux))
-                    y_bs = np.concatenate((y_bs, y_bs_aux))
+            for virtual_rsu_x in  range(1,4):
+  #              for virtual_rsu_y in range(1,5):
+  # change of virtual_rsu_x intead of virtual_rsu_y to reduce number of virtual rsu to 4
+                 pos_x_rsu = self.b_d*(virtual_rsu_x) + self.street_width*(virtual_rsu_x-1) +self.street_width/2
+                 pos_y_rsu = self.b_d*(virtual_rsu_x) + self.street_width*(virtual_rsu_x-1) +self.street_width/2
+                 x_bs_aux = np.array([ pos_x_rsu ])
+                 y_bs_aux = np.array([ pos_y_rsu ])
+                 x_bs = np.concatenate((x_bs, x_bs_aux))
+                 y_bs = np.concatenate((y_bs, y_bs_aux))
                     
             #calculation of RSU  coordinates for multiple basic grid 5x5                 
             for r in range(self.n_rows):
                 for c in range(self.n_colums):
-                    x_aux = x_bs.reshape(16,1) + x_base + r*5*(self.b_w + self.street_width)
-                    y_aux= y_bs.reshape(16,1) + y_base + c*5*(self.b_d + self.street_width)
-                    x = np.concatenate((x, x_aux.reshape(16*self.param.num_blocks_per_cell)))
-                    y = np.concatenate((y, y_aux.reshape(16*self.param.num_blocks_per_cell)))
+                    x_aux = x_bs.reshape(3,1) + x_base + r*5*(self.b_w + self.street_width)
+                    y_aux= y_bs.reshape(3,1) + y_base + c*5*(self.b_d + self.street_width)
+                    x = np.concatenate((x, x_aux.reshape(3*self.param.num_blocks_per_cell)))
+                    y = np.concatenate((y, y_aux.reshape(3*self.param.num_blocks_per_cell)))
             self.x = x
             self.y = y
         
@@ -139,14 +140,15 @@ class TopologyV2v_urban(Topology):
         else:
             i = 0
             # For virtual RSU, there will be 16 Veicles with 100 mts coverage          
-            for virtual_rsu_x in  range(1,5):
-                for virtual_rsu_y in range(1,5):
-                    pos_x_rsu = self.b_d*(virtual_rsu_x) + self.street_width*(virtual_rsu_x-1) +self.street_width/2
-                    pos_y_rsu = self.b_d*(virtual_rsu_y) + self.street_width*(virtual_rsu_y-1) +self.street_width/2
-                    x_bs_aux = np.array([ pos_x_rsu ])
-                    y_bs_aux = np.array([ pos_y_rsu ])
-                    x_bs = np.concatenate((x_bs, x_bs_aux))
-                    y_bs = np.concatenate((y_bs, y_bs_aux))
+            for virtual_rsu_x in  range(1,4):
+#                for virtual_rsu_y in range(1,5):
+ # change of virtual_rsu_x intead of virtual_rsu_y to reduce number of virtual rsu to 4
+                 pos_x_rsu = self.b_d*(virtual_rsu_x) + self.street_width*(virtual_rsu_x-1) +self.street_width/2
+                 pos_y_rsu = self.b_d*(virtual_rsu_x) + self.street_width*(virtual_rsu_x-1) +self.street_width/2
+                 x_bs_aux = np.array([ pos_x_rsu ])
+                 y_bs_aux = np.array([ pos_y_rsu ])
+                 x_bs = np.concatenate((x_bs, x_bs_aux))
+                 y_bs = np.concatenate((y_bs, y_bs_aux))
 
             for cell_x, cell_y, cell_azimuth in zip(self.macrocell.x, self.macrocell.y, self.macrocell.azimuth):
                 #print("base station #{}".format(i))
@@ -187,10 +189,10 @@ class TopologyV2v_urban(Topology):
                 #calculation of RSU  coordinates for multiple basic grid 5x5                 
                 for r in range(self.n_rows):
                     for c in range(self.n_colums):
-                        x_aux = x_bs.reshape(16,1) + x_base + r*5*(self.b_w + self.street_width)
-                        y_aux= y_bs.reshape(16,1) + y_base + c*5*(self.b_d + self.street_width)
-                        x = np.concatenate((x, x_aux.reshape(16*self.param.num_blocks_per_cell)))
-                        y = np.concatenate((y, y_aux.reshape(16*self.param.num_blocks_per_cell)))
+                        x_aux = x_bs.reshape(3,1) + x_base + r*5*(self.b_w + self.street_width)
+                        y_aux= y_bs.reshape(3,1) + y_base + c*5*(self.b_d + self.street_width)
+                        x = np.concatenate((x, x_aux.reshape(3*self.param.num_blocks_per_cell)))
+                        y = np.concatenate((y, y_aux.reshape(3*self.param.num_blocks_per_cell)))
                 self.x = x
                 self.y = y              
                 
@@ -297,7 +299,7 @@ if __name__ == '__main__':
     param.num_blocks_per_cell = 2
     num_clusters = 1
     intersite_distance = 5000
-    tam_cluster = 1
+    tam_cluster = 2
     topology = TopologyV2v_urban(param, intersite_distance,num_clusters,tam_cluster)
     topology.calculate_coordinates()
     
